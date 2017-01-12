@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang=''>
+<head>
+   <meta charset='utf-8'>
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="stylesheet" href="css/table.css">
+   <title>EdiTable</title>
+</head>
+<body>
+    <table id='yourTable'>
+        <thead><tr><th>Check</th><th>Num</th><th>Name</th><th>Surname</th><th>Position</th><th>Telephone</th></tr></thead>
+        <tbody>
+        <tr><td><input type="checkbox"/></td><td>1</td><td>Piotr</td><td>Ranosz</td><td>Programista</td><td>600 500 200</td></tr>
+        <tr><td><input type="checkbox"/></td><td>2</td><td>Robert</td><td>Nowak</td><td>Doktor</td><td>600 555 200</td></tr>
+        <tr><td><input type="checkbox"/></td><td>3</td><td>Zbigniew</td><td>Kowal</td><td>Piłkarz</td><td>612 501 200</td></tr>
+        <tr><td><input type="checkbox"/></td><td>4</td><td>Adam</td><td>Małysz</td><td>Skoczek narciarski</td><td>755 500 220</td></tr>
+        <tr><td><input type="checkbox"/></td><td>5</td><td>Marcin</td><td>Swierc</td><td>Biegacz</td><td>567 500 777</td></tr>
+        <tr><td><input type="checkbox"/></td><td>6</td><td>Robert</td><td>Faron</td><td>Biegacz</td><td>262 500 280</td></tr>
+        </tbody>
+    </table>
+    <script src="js/ediTable.js"></script>
+    <script>
+        
+        /*
+         * Expected usage of component
+         */
+        
+        var tableId = document.getElementById("yourTable");
+
+        var tableSettings = {
+            editType: "contextMenu", // buttons, none
+            sorting: true, // false
+            export: true, // false
+            defaultCss: true, // false
+            colToSort: [0,1], // choice column to sort (optional property)
+            pagination: true, //false
+            language: "pl" // "eng"
+        };
+        
+        var ediTable = new EdiTable(tableId, tableSet);
+        
+    </script>
+</body>
+</html>
