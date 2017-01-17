@@ -4,8 +4,8 @@
    <meta charset='utf-8'>
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1">
-   <link rel="stylesheet" href="css/table.css">
    <title>EdiTable</title>
+   <link href="css/ediTable.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
     <table id='yourTable'>
@@ -28,14 +28,14 @@
         
         var tableId = document.getElementById("yourTable");
 
-        var tableSettings = {
-            editType: "contextMenu", // buttons, none
-            sorting: true, // false
-            export: true, // false
+        var tableSet = {
+            editType: "buttons", // buttons, none
+            sorting: false, // false
+            exportCSV: true, // false
             defaultCss: true, // false
-            colToSort: [0,1], // choice column to sort (optional property)
+          //  colToSort: [0,1], // choice column to sort (optional property)
             pagination: true, //false
-            language: "pl" // "eng"
+            language: "eng" // "eng"
         };
         
         var ediTable = new EdiTable(tableId, tableSet);

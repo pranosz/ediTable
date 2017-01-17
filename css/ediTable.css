@@ -1,0 +1,24 @@
+
+body {
+    
+}
+
+#yourTable, th, td {
+    border: 1px solid black;
+}
+
+.btn {
+    min-width: 20px;
+    min-height: 10px;
+    margin: 0px;
+    padding: 0px;
+    float: left;
+}
+
+.btn-insert {
+    background: greenyellow;
+}
+
+.btn-delete {
+    background: red;
+}
