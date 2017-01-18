@@ -12,8 +12,31 @@ function EdiTable(tableId, tableSet){
     var _tId = tableId;
     var config = this._setConfig(tableSet);
     
-    console.log("config: "+JSON.stringify(config));
-
+    for(var opt in config){
+        switch (config[opt]){
+            case "editType":
+                this._setEditType(config[opt]);
+                break;
+            case "sorting":
+                this._setSorting(config[opt]);
+                break;
+            case "exportCSV":
+                this._setCSV(config[opt]);
+                break;
+            case "defaultCss":
+                this._setDefaultCss(config[opt]);
+                break;
+            case "colToSort":
+                this._setColToSort(config[opt]);
+                break;
+            case "pagination":
+                this._setPagination(config[opt]);
+                break;
+            case "language":
+                this._setLanguage(config[opt]);
+                break;
+        }
+    }
 };
 
 /*
@@ -46,4 +69,67 @@ EdiTable.prototype._setConfig = function(tableSet){
         } 
     }
     return defaultCopy;
+};
+
+/*
+ * _setEditType
+ */
+EdiTable.protptype._setEditType = function(ediType){
+    if(ediType === "context"){
+        console.log("_setEditType: context");
+        this._addContextmenu();
+    }else if(ediType === "buttons"){
+        console.log("_setEditType: addBtns");
+        this._addBtns();
+    }else {
+        //none
+    }
+};
+/*
+ * _setSorting
+ */
+EdiTable.prototype._setSorting = function(state){
+    this._sorting(state);
+};
+/*
+ * _setCSV
+ */
+EdiTable.prototype._setCSV = function(){
+    
+};
+/*
+ * _setDefaultCss
+ */
+EdiTable.prototype._setDefaultCss = function(){
+    
+};
+/*
+ * _setColToSort
+ */
+EdiTable.prototype._setColToSort = function(){
+    
+};
+/*
+ * _setPagination
+ */
+EdiTable.prototype._setPagination = function(){
+    
+};
+/*
+ * _setLanguage
+ */
+EdiTable.prototype._setLanguage = function(){
+    
+};
+/*
+ * _addContextmenu
+ */
+EdiTable.prototype._addContextmenu = function(){
+    var options = {
+        target: this._tId,
+        type: "contextmenu",
+        labels: ['add on right','add on left','delete'],
+        feedback: [addCol,addRow,delCol,delRow]
+    };
+    Event.add(options); 
 };
