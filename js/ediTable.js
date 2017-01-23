@@ -9,11 +9,11 @@
 "use strict";
 
 function EdiTable(tableId, tableSet){
-    var _tId = tableId;
+    this._tId = tableId;
     var config = this._setConfig(tableSet);
     
     for(var opt in config){
-        switch (config[opt]){
+        switch (opt){
             case "editType":
                 this._setEditType(config[opt]);
                 break;
@@ -74,7 +74,7 @@ EdiTable.prototype._setConfig = function(tableSet){
 /*
  * _setEditType
  */
-EdiTable.protptype._setEditType = function(ediType){
+EdiTable.prototype._setEditType = function(ediType){
     if(ediType === "context"){
         console.log("_setEditType: context");
         this._addContextmenu();
@@ -89,7 +89,7 @@ EdiTable.protptype._setEditType = function(ediType){
  * _setSorting
  */
 EdiTable.prototype._setSorting = function(state){
-    this._sorting(state);
+    //this._sorting(state);
 };
 /*
  * _setCSV
@@ -122,14 +122,61 @@ EdiTable.prototype._setLanguage = function(){
     
 };
 /*
+ * _addRow
+ */
+EdiTable.prototype._addRow = function(side){
+    
+};
+/*
+ * _delRow
+ */
+EdiTable.prototype._delRow = function(){
+    
+};
+/*
+ * _addCol
+ */
+EdiTable.prototype._addCol = function(side){
+    
+};
+/*
+ * _delCol
+ */
+EdiTable.prototype._delCol = function(){
+    
+};
+/*
  * _addContextmenu
  */
 EdiTable.prototype._addContextmenu = function(){
-    var options = {
-        target: this._tId,
-        type: "contextmenu",
-        labels: ['add on right','add on left','delete'],
-        feedback: [addCol,addRow,delCol,delRow]
-    };
-    Event.add(options); 
+    var target = this._tId,
+        type = "contextmenu",
+        useCapture = false,
+        callback = [
+        {btn: "addColBtn",function: this.addCol,params: ["L"]},
+        {btn: "delColBtn",function: this.delCol},
+        {btn: "addColBtn",function: this.addCol,params: ["R"]},
+        {btn: "addRowBtn",function: this.addRow,params: ["U"]},
+        {btn: "delRowBtn",function: this.delRow},
+        {btn: "addRowBtn",function: this.addRow,params: ["D"]}
+    ];
+    Event.add(target,type,callback,useCapture); 
+};
+/*
+ * _addBtns
+ */
+EdiTable.prototype._addBtns = function(){
+    var target = this._tId,
+        type = "click",
+        useCapture = false,
+        callback = [
+        {btn: "addColBtn",function: this.addCol,params: ["L"]},
+        {btn: "delColBtn",function: this.delCol},
+        {btn: "addColBtn",function: this.addCol,params: ["R"]},
+        {btn: "addRowBtn",function: this.addRow,params: ["U"]},
+        {btn: "delRowBtn",function: this.delRow},
+        {btn: "addRowBtn",function: this.addRow,params: ["D"]}
+    ];
+    
+    Event.add(target,type,callback,useCapture); 
 };
