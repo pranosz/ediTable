@@ -11,14 +11,22 @@
     <table id='yourTable'>
         <thead><tr><th>Check</th><th>Num</th><th>Name</th><th>Surname</th><th>Position</th><th>Telephone</th></tr></thead>
         <tbody>
-        <tr><td><input type="checkbox"/></td><td>1</td><td>Piotr</td><td>Ranosz</td><td>Programista</td><td>600 500 200</td></tr>
+            <tr>
+                <td><input type="checkbox"/></td><td>1</td><td>Piotr</td><td>Nowak</td><td>Programista</td><td>600 500 200</td>
+            </tr>
         <tr><td><input type="checkbox"/></td><td>2</td><td>Robert</td><td>Nowak</td><td>Doktor</td><td>600 555 200</td></tr>
         <tr><td><input type="checkbox"/></td><td>3</td><td>Zbigniew</td><td>Kowal</td><td>Piłkarz</td><td>612 501 200</td></tr>
-        <tr><td><input type="checkbox"/></td><td>4</td><td>Adam</td><td>Małysz</td><td>Skoczek narciarski</td><td>755 500 220</td></tr>
-        <tr><td><input type="checkbox"/></td><td>5</td><td>Marcin</td><td>Swierc</td><td>Biegacz</td><td>567 500 777</td></tr>
-        <tr><td><input type="checkbox"/></td><td>6</td><td>Robert</td><td>Faron</td><td>Biegacz</td><td>262 500 280</td></tr>
+        <tr><td><input type="checkbox"/></td><td>4</td><td>Adam</td><td>Kowalski</td><td>Skoczek narciarski</td><td>755 500 220</td></tr>
+        <tr><td><input type="checkbox"/></td><td>5</td><td>Marcin</td><td>Nowak</td><td>Biegacz</td><td>567 500 777</td></tr>
+        <tr><td><input type="checkbox"/></td><td>6</td><td>Robert</td><td>Nowak</td><td>Biegacz</td><td>262 500 280</td></tr>
         </tbody>
     </table>
+    <div class="row-edit">
+        <div class="circle-up"><button class="btn-arrows btn-up"></button></div>
+        <div class="circle-down"><button class="btn-arrows btn-down"></button></div>
+        <div class="circle-delete"><button class="btn-arrows btn-delete"></button></div>
+    </div>
+    
     <script src="js/event.js"></script>
     <script src="js/ediTable.js"></script>
     <script>
@@ -30,7 +38,7 @@
         var tableId = document.getElementById("yourTable");
 
         var tableSet = {
-            //editType: "buttons", // buttons, none
+            editType: "buttons", // buttons, none
             sorting: false, // false
             exportCSV: true, // false
             defaultCss: true, // false

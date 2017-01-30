@@ -11,6 +11,7 @@
 function EdiTable(tableId, tableSet){
     this._table = tableId;
     this._contextmenu = null;
+    this._buttons = null;
     var config = this._setConfig(tableSet);
     
     for(var opt in config){
@@ -124,25 +125,52 @@ EdiTable.prototype._setLanguage = function(){
  * _addRow
  */
 EdiTable.prototype._addRow = function(side){
-    console.log("_addRow "+side);
+    var newRow = null;
+    var index = null;
+    var colums = null;
+    if(side === "U"){
+        index = this._selectedRow;
+    }else if(side === "D"){
+        index = this._selectedRow+1;
+    }
+    if(index !== null){
+        newRow = this._table.insertRow(index);
+        colums = this._table.rows[0].cells;
+        Array.prototype.forEach.call(colums,function(col,i){
+            newRow.insertCell(i).innerHTML = "Ddefault";
+        });                
+    }
 };
 /*
  * _delRow
  */
 EdiTable.prototype._delRow = function(){
-    console.log("_delRow ");
+    this._table.deleteRow(this._selectedRow);
 };
 /*
  * _addCol
  */
 EdiTable.prototype._addCol = function(side){
-    console.log("_addCol "+side);
+    var index = null;
+    var r = this._table.rows;
+    if(side === "R"){
+        index = this._selectedCol + 1;
+    }else if(side === "L"){
+        index = this._selectedCol;
+    }
+    Array.prototype.forEach.call(r,function(row,i){
+        row.insertCell(index).innerHTML = "Ddefault";
+    });
 };
 /*
  * _delCol
  */
 EdiTable.prototype._delCol = function(){
-    console.log("_delCol ");
+    var index = this._selectedCol;
+    var r = this._table.rows;
+    Array.prototype.forEach.call(r,function(row,i){
+        row.deleteCell(index);
+    });
 };
 /*
  * _addEventsToButtons
@@ -199,7 +227,7 @@ EdiTable.prototype._drawContextmenu = function(btns){
         var li = document.createElement("li");
         var b = document.createElement("button");
         var text = document.createTextNode(btn.label);
-        b.classList.add("button");
+        b.classList.add("btn-context");
         b.classList.add(btn.class);
         b.appendChild(text);
         li.appendChild(b);
@@ -228,12 +256,12 @@ EdiTable.prototype._addEventContextmenu = function(){
             owner._selectedRow = e.target.parentNode.rowIndex;
             owner._selectedCol = e.target.cellIndex;
             if(node === "TH"){
-                btnDis.classList.remove("button");
-                btnDis.classList.add("button-disabled");
+                btnDis.classList.remove("btn-context");
+                btnDis.classList.add("btn-disabled");
                 btnDis.disabled = true;
             }else if(node === "TD"){
-                btnDis.classList.remove("button-disabled");
-                btnDis.classList.add("button");
+                btnDis.classList.remove("btn-disabled");
+                btnDis.classList.add("btn-context");
                 btnDis.disabled = false;
             }
             owner._showContexmenu();
@@ -274,20 +302,48 @@ EdiTable.prototype._addContextmenu = function(){
     this._addEventContextmenu(); 
 };
 /*
+ * 
+ * ----------------------------Buttons------------------------
+ */
+EdiTable.prototype._drawButtons = function(btns){
+    var btnsBox = document.createElement("div");  
+    btnsBox.classList.add("btns-edit");
+    
+    btns.forEach(function(btn,i){
+        var circle = document.createElement("div");
+        var button = document.createElement("button");
+        
+        circle.classList.add(btn.class[0]);
+        button.classList.add("btn-arrows");
+        button.classList.add(btn.class[1]);
+        
+        circle.appendChild(button);
+        btnsBox.appendChild(circle);
+    });
+    
+    this._table.parentNode.insertBefore(btnsBox,null);
+    this._buttons = document.querySelector(".btns-edit");
+    
+    var leftMarginStr = window.getComputedStyle(this._table).marginLeft;
+    var leftMargin = Number(leftMarginStr.slice(0,leftMarginStr.length-2));
+    var offsetTop = this._table.rows[2].offsetTop+leftMargin; // dynamic
+    //buttons.style.position = "absolute";
+    this._buttons.style.top = offsetTop+"px";
+    this._buttons.style.left = (this._table.rows[0].clientWidth+leftMargin)+"px";
+   // this._buttons.style.transform  = "rotate(-90deg)";
+};
+/*
  * _addBtns
  */
 EdiTable.prototype._addBtns = function(){
-    var target = this._tId,
-        type = "click",
-        useCapture = false,
-        callback = [
-        {btn: "addColBtn",function: this.addCol,params: ["L"]},
-        {btn: "delColBtn",function: this.delCol},
-        {btn: "addColBtn",function: this.addCol,params: ["R"]},
-        {btn: "addRowBtn",function: this.addRow,params: ["U"]},
-        {btn: "delRowBtn",function: this.delRow},
-        {btn: "addRowBtn",function: this.addRow,params: ["D"]}
+    var blueprints = [
+    {class: ["circle-up","btn-up"], label: "",function: this._addRow},
+    {class: ["circle-down","btn-down"], label: "",function: this._addRow},
+    {class: ["circle-delete","btn-row-delete"], label: "",function: this._delRow},
+    /*
+    {class: ["circle-up","btn-right"], label: "",function: this._addCol},
+    {class: ["circle-down","btn-left"], label: "",function: this._addCol},
+    {class: ["circle-delete","btn-col-delete"], label: "",function: this._delCol}*/
     ];
-    
-    Event.add(target,type,callback,useCapture); 
+    this._drawButtons(blueprints);
 };
