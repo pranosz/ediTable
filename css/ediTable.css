@@ -9,22 +9,45 @@ html, body, ul {
     margin: 20px;
 }
 
-.btns-edit {
+#btns-row-edit {
+    position: absolute;
+    height: 40px;
+    width: 45px;
+    padding: 0px;
+    margin: 0px;
+    display: block;
+}
+#btns-col-edit{
     position: absolute;
     height: 40px;
     padding: 0px;
     margin: 0px;
+    display: block;
 }
 
 .circle-up {
+    position: relative;
+    left: 20px;
     width: 16px;
     height: 16px;
     background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABXklEQVR4nKWU0XGCQBCGv0XfTQexBCPk3Q5CB5IOKMEStIJoB1hBeA8oJWgHWIDZPHAYhOOYmH+GGWD3vlu43V+wyM+YAKG5nlrhEkiAJA+4tNeKBbZUWEsXdCeFUiDOA3a9wHnGh0DkAlnA20PAewfoZyyB7V9gDUV1pQIw++JtJCQPwgC4KmHxyl78jIlCITDtS1Y4md2dOQKzMRC5EgG+lRjA9RWGEY2BhQsGpMUrewA/Ix3IX3hUvdZfnfd76s37HoWeK6rK+jjnXD8f55xVWLnW9AIVSrEsFmWt1bTYgX1BMwWd0coDLkJ1SLYiPIHCEkvbI9WC7oDUUkQxphr0RWunqZ/x2QesczpGAEnd2KchMxiSMYupZ/7J6j8wAIGVYVV6xGka1d0c59Y25oX19AYUN+3rrg/zgA0QufqsUVVJZVub5nvLQcHLgWe5EiOEbeNQOKEkOrqfolo/6Ax2cVXIA1UAAAAASUVORK5CYII=')
         no-repeat;
     background-size: 16px 16px;
 }
-.circle-delete {
+.circle-down {
     position: relative;
+    left: 20px;
+    width: 16px;
+    height: 16px;
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABXklEQVR4nKWU0XGCQBCGv0XfTQexBCPk3Q5CB5IOKMEStIJoB1hBeA8oJWgHWIDZPHAYhOOYmH+GGWD3vlu43V+wyM+YAKG5nlrhEkiAJA+4tNeKBbZUWEsXdCeFUiDOA3a9wHnGh0DkAlnA20PAewfoZyyB7V9gDUV1pQIw++JtJCQPwgC4KmHxyl78jIlCITDtS1Y4md2dOQKzMRC5EgG+lRjA9RWGEY2BhQsGpMUrewA/Ix3IX3hUvdZfnfd76s37HoWeK6rK+jjnXD8f55xVWLnW9AIVSrEsFmWt1bTYgX1BMwWd0coDLkJ1SLYiPIHCEkvbI9WC7oDUUkQxphr0RWunqZ/x2QesczpGAEnd2KchMxiSMYupZ/7J6j8wAIGVYVV6xGka1d0c59Y25oX19AYUN+3rrg/zgA0QufqsUVVJZVub5nvLQcHLgWe5EiOEbeNQOKEkOrqfolo/6Ax2cVXIA1UAAAAASUVORK5CYII=')
+        no-repeat;
+    background-size: 16px 16px;
+    transform: rotate(180deg);
+    float: left;
+}
+.circle-delete-row {
+    position: relative;
+    left: 20px;
     top: -8px;
     width: 16px;
     height: 16px;
@@ -33,15 +56,33 @@ html, body, ul {
     background-size: 16px 16px;
     float: left;
 }
-.circle-down {
+.circle-right {
     width: 16px;
     height: 16px;
-    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABaElEQVR4nKWU0XGCQBCGvz191w5iCQjkOXQQO5BUEEqwBK0gSQekA/OcQynBVBAsQC4PHAaB0wn5ZxyG3dvP3eV2hR4FmgmwsL9py10AKZBmIcd2rPTAlgbW0gVdyEAhkGQhb06gr3kRiK+BesCvu5CnDjDQLIHXv8AaiutMBcD75HEkpANhAJwMi/yedwk0EwO5wOw/QAMHAW8MxB2YIUcobhCmCF79ahnxGIg6Z4W82eg+2Q/otcyRBBrTF1Aqor3PR59vvuNBlWz7fMqVgTqxHuRzORC8QPPcNgeaZbN3nTBf8+2aCjsNs3rE7I04XDuvBHJ3kkyNYXUOMKyujaRALrYsZ08ASlWVqEr3n1slcqsMq619Rq4DdXtUFnIUfstyKLoGAxBYWValIZumkd1545yvjTUkA3hJc6ou7mEWsgFiw405rrIqqNbWpmnvbGyA+Y47OZEgLNqLw8ABQ2pGrPc+X+3YH/iNdvORKH4dAAAAAElFTkSuQmCC')
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABXklEQVR4nKWU0XGCQBCGv0XfTQexBCPk3Q5CB5IOKMEStIJoB1hBeA8oJWgHWIDZPHAYhOOYmH+GGWD3vlu43V+wyM+YAKG5nlrhEkiAJA+4tNeKBbZUWEsXdCeFUiDOA3a9wHnGh0DkAlnA20PAewfoZyyB7V9gDUV1pQIw++JtJCQPwgC4KmHxyl78jIlCITDtS1Y4md2dOQKzMRC5EgG+lRjA9RWGEY2BhQsGpMUrewA/Ix3IX3hUvdZfnfd76s37HoWeK6rK+jjnXD8f55xVWLnW9AIVSrEsFmWt1bTYgX1BMwWd0coDLkJ1SLYiPIHCEkvbI9WC7oDUUkQxphr0RWunqZ/x2QesczpGAEnd2KchMxiSMYupZ/7J6j8wAIGVYVV6xGka1d0c59Y25oX19AYUN+3rrg/zgA0QufqsUVVJZVub5nvLQcHLgWe5EiOEbeNQOKEkOrqfolo/6Ax2cVXIA1UAAAAASUVORK5CYII=')
+        no-repeat;
+    background-size: 16px 16px;
+    transform: rotate(90deg);
+    float: left;
+}
+.circle-left {
+    width: 16px;
+    height: 16px;
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAABXklEQVR4nKWU0XGCQBCGv0XfTQexBCPk3Q5CB5IOKMEStIJoB1hBeA8oJWgHWIDZPHAYhOOYmH+GGWD3vlu43V+wyM+YAKG5nlrhEkiAJA+4tNeKBbZUWEsXdCeFUiDOA3a9wHnGh0DkAlnA20PAewfoZyyB7V9gDUV1pQIw++JtJCQPwgC4KmHxyl78jIlCITDtS1Y4md2dOQKzMRC5EgG+lRjA9RWGEY2BhQsGpMUrewA/Ix3IX3hUvdZfnfd76s37HoWeK6rK+jjnXD8f55xVWLnW9AIVSrEsFmWt1bTYgX1BMwWd0coDLkJ1SLYiPIHCEkvbI9WC7oDUUkQxphr0RWunqZ/x2QesczpGAEnd2KchMxiSMYupZ/7J6j8wAIGVYVV6xGka1d0c59Y25oX19AYUN+3rrg/zgA0QufqsUVVJZVub5nvLQcHLgWe5EiOEbeNQOKEkOrqfolo/6Ax2cVXIA1UAAAAASUVORK5CYII=')
+        no-repeat;
+    background-size: 16px 16px;
+    transform: rotate(-90deg);
+    float: left;
+}
+.circle-delete {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAA9ElEQVR4nK2UYRGDMAyFvylgDiYBCZPAHCABCZMwCUgAB0hAAhK6Kcj+tFwvS9pxG3fvT8v7LnnJ9YTxCTTALeqsrp/ADMwneFl+DesFgoBUFAT6Gmz8AqQ1lio7CkvqNaz7AZbU7QMQ2Ix8poJ5jcrPNoEGgcEwXAuZrrGIxhjegFPJGldHQ0fnPGmi0labmccsIjeOEjBl2eYLb2R3CCgCSwa81/7HCNYbQCm7vSMEli9gaU1q0MVbGw3zBqV9Qwpat90VBhAEWsMXUgdelVtl+p9L/YeXZl9478WxKq1pMGHqGfvPA5tBLwIPJ8ct3l0s7xuJ0U9kwmLTRQAAAABJRU5ErkJggg==')
         no-repeat;
     background-size: 16px 16px;
     float: left;
 }
-
 /*
 * Buttons menu
 */
@@ -52,10 +93,6 @@ html, body, ul {
     width: 100%;
     background: transparent;
     cursor: pointer;
-}
-
-.btn-up {
-    
 }
 
 

@@ -11,7 +11,12 @@
 function EdiTable(tableId, tableSet){
     this._table = tableId;
     this._contextmenu = null;
-    this._buttons = null;
+    this._rowBtns = null;
+    this._colBtns = null;
+    this._selectedRow = null;
+    this._selectedCol = null;
+    this._xPozCol = null;
+    
     var config = this._setConfig(tableSet);
     
     for(var opt in config){
@@ -243,8 +248,6 @@ EdiTable.prototype._drawContextmenu = function(btns){
 EdiTable.prototype._addEventContextmenu = function(){
     
     this._t = 1;
-    this._selectedRow = null;
-    this._selectedCol = null;
     var owner = this;
     
     this._table.addEventListener("contextmenu",function(e){
@@ -306,8 +309,10 @@ EdiTable.prototype._addContextmenu = function(){
  * ----------------------------Buttons------------------------
  */
 EdiTable.prototype._drawButtons = function(btns){
-    var btnsBox = document.createElement("div");  
-    btnsBox.classList.add("btns-edit");
+    var btnsRowBox = document.createElement("div");
+    var btnsColBox = document.createElement("div");
+    btnsRowBox.setAttribute("id","btns-row-edit");
+    btnsColBox.setAttribute("id","btns-col-edit");
     
     btns.forEach(function(btn,i){
         var circle = document.createElement("div");
@@ -318,32 +323,112 @@ EdiTable.prototype._drawButtons = function(btns){
         button.classList.add(btn.class[1]);
         
         circle.appendChild(button);
-        btnsBox.appendChild(circle);
+        if(i<3){
+            btnsRowBox.appendChild(circle);  
+        }else {
+            btnsColBox.appendChild(circle);
+        }
     });
     
-    this._table.parentNode.insertBefore(btnsBox,null);
-    this._buttons = document.querySelector(".btns-edit");
-    
+    this._table.parentNode.insertBefore(btnsRowBox,null);
+    this._table.parentNode.insertBefore(btnsColBox,null);
+    this._rowBtns = document.querySelector("#btns-row-edit");
+    this._colBtns = document.querySelector("#btns-col-edit");
+};
+/*
+ * _btnRowPosition
+ */
+EdiTable.prototype._btnRowPosition = function(){
     var leftMarginStr = window.getComputedStyle(this._table).marginLeft;
     var leftMargin = Number(leftMarginStr.slice(0,leftMarginStr.length-2));
-    var offsetTop = this._table.rows[2].offsetTop+leftMargin; // dynamic
-    //buttons.style.position = "absolute";
-    this._buttons.style.top = offsetTop+"px";
-    this._buttons.style.left = (this._table.rows[0].clientWidth+leftMargin)+"px";
-   // this._buttons.style.transform  = "rotate(-90deg)";
+    var offsetTop = this._table.rows[Number(this._selectedRow)].offsetTop+leftMargin;           
+    this._rowBtns.style.top = offsetTop+"px";
+    this._rowBtns.style.left = (this._table.rows[0].clientWidth)+"px";
+};
+/*
+ * _btnColPosition
+ */
+EdiTable.prototype._btnColPosition = function(){
+    this._colBtns.style.top = "0px";
+    this._colBtns.style.left = this._xPozCol+"px";
+};
+/*
+ * _addEventToTRAndTH
+ */
+EdiTable.prototype._addEventToTRAndTH = function(){
+    var owner = this;
+    
+    document.querySelector("body").addEventListener("mouseover",function(e){
+        var node = e.target.nodeName;  
+        if(node === "TD" || e.target.id === "btns-row-edit"){
+            if(node === "TD"){
+                owner._selectedRow = e.target.parentNode.rowIndex;
+                owner._btnRowPosition();
+            }
+            owner._colBtns.style.display = "none";
+            owner._rowBtns.style.display = "block";
+        }else if(node === "TH" || e.target.id === "btns-col-edit"){
+            if(node === "TH"){
+                owner._xPozCol = e.target.offsetLeft+(e.target.clientWidth/2);
+                owner._selectedCol = e.target.cellIndex;
+                owner._btnColPosition();
+            }
+            owner._rowBtns.style.display = "none";
+            owner._colBtns.style.display = "block";
+        }
+    },false);
+    document.querySelector("body").addEventListener("mouseout",function(e){
+        var node = e.target.nodeName;
+        if(node === "TD"){
+            owner._rowBtns.style.display = "none";
+        }else if(node === "TH"){
+            owner._colBtns.style.display = "none";
+        }
+    },false); 
+};
+/*
+ * _addEventsToBtns
+ */
+EdiTable.prototype._addEventsToBtns = function(){
+    var owner = this;
+    document.querySelector("body").addEventListener("click",function(e){
+    var node = e.target.classList.item(1);
+        switch(node){
+            case "button-add-row-up":
+                owner._addRow("U");
+            break;
+            case "button-add-row-down":
+                owner._addRow("D");
+            break;
+            case "button-del-row":
+                owner._delRow();
+            break;
+            case "button-add-col-right":
+                owner._addCol("R");
+            break;
+            case "button-add-col-left":
+                owner._addCol("L");
+            break;           
+            case "button-del-col":
+                owner._delCol();
+            break;
+        }
+     owner._btnRowPosition();
+    },false);
 };
 /*
  * _addBtns
  */
 EdiTable.prototype._addBtns = function(){
     var blueprints = [
-    {class: ["circle-up","btn-up"], label: "",function: this._addRow},
-    {class: ["circle-down","btn-down"], label: "",function: this._addRow},
-    {class: ["circle-delete","btn-row-delete"], label: "",function: this._delRow},
-    /*
-    {class: ["circle-up","btn-right"], label: "",function: this._addCol},
-    {class: ["circle-down","btn-left"], label: "",function: this._addCol},
-    {class: ["circle-delete","btn-col-delete"], label: "",function: this._delCol}*/
+    {class: ["circle-up","button-add-row-up"], label: "",function: this._addRow},
+    {class: ["circle-down","button-add-row-down"], label: "",function: this._addRow},
+    {class: ["circle-delete-row","button-del-row"], label: "",function: this._delRow},
+    {class: ["circle-left","button-add-col-left"], label: "",function: this._addCol},
+    {class: ["circle-delete","button-del-col"], label: "",function: this._delCol},
+    {class: ["circle-right","button-add-col-right"], label: "",function: this._addCol}
     ];
     this._drawButtons(blueprints);
+    this._addEventToTRAndTH();
+    this._addEventsToBtns();
 };
