@@ -8,24 +8,6 @@
    <link href="css/ediTable.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
-    <table id='yourTable'>
-        <thead><tr><th>Check</th><th>Num</th><th>Name</th><th>Surname</th><th>Position</th><th>Telephone</th></tr></thead>
-        <tbody>
-            <tr>
-                <td><input type="checkbox"/></td><td>1</td><td>Piotr</td><td>Nowak</td><td>Programista</td><td>600 500 200</td>
-            </tr>
-        <tr><td><input type="checkbox"/></td><td>2</td><td>Robert</td><td>Nowak</td><td>Doktor</td><td>600 555 200</td></tr>
-        <tr><td><input type="checkbox"/></td><td>3</td><td>Zbigniew</td><td>Kowal</td><td>Piłkarz</td><td>612 501 200</td></tr>
-        <tr><td><input type="checkbox"/></td><td>4</td><td>Adam</td><td>Kowalski</td><td>Skoczek narciarski</td><td>755 500 220</td></tr>
-        <tr><td><input type="checkbox"/></td><td>5</td><td>Marcin</td><td>Nowak</td><td>Biegacz</td><td>567 500 777</td></tr>
-        <tr><td><input type="checkbox"/></td><td>6</td><td>Robert</td><td>Nowak</td><td>Biegacz</td><td>262 500 280</td></tr>
-        <tr><td><input type="checkbox"/></td><td>6</td><td>Robert</td><td>Nowak</td><td>Biegacz</td><td>262 500 280</td></tr>
-        <tr><td><input type="checkbox"/></td><td>6</td><td>Robert</td><td>Nowak</td><td>Biegacz</td><td>262 500 280</td></tr>
-        <tr><td><input type="checkbox"/></td><td>6</td><td>Robert</td><td>Nowak</td><td>Biegacz</td><td>262 500 280</td></tr>
-        <tr><td><input type="checkbox"/></td><td>6</td><td>Robert</td><td>Nowak</td><td>Biegacz</td><td>262 500 280</td></tr>
-        <tr><td><input type="checkbox"/></td><td>6</td><td>Robert</td><td>Nowak</td><td>Biegacz</td><td>262 500 280</td></tr>
-        </tbody>
-    </table>
     
     <script src="js/event.js"></script>
     <script src="js/ediTable.js"></script>
@@ -35,19 +17,25 @@
          * Expected usage of component
          */
         
-        var tableId = document.getElementById("yourTable");
+        var data = {tableData:[
+                {th:"check",td:["true","true","false","true"],type:"string"},
+                {th:"Num",td:[1,2,3,4],type:"number"},
+                {th:"Name",td:["Piotr","Robert","Kamil","Marcin"],type:"string"},
+                {th:"Surname",td:["Kowalski","Nowak","Noname","Długosz"],type:"string"},
+                {th:"Position",td:["Programista","Księgowy","Sportowiec","Sportowiec"],type:"string"},
+                {th:"Telephone",td:["699-399-234","324-567-901","",""],type:"string"}
+        ]};
 
         var tableSet = {
-            editType: "buttons", // buttons, none
+            editType: "buttons", // context, buttons, none
             sorting: false, // false
             exportCSV: true, // false
-            defaultCss: true, // false
           //  colToSort: [0,1], // choice column to sort (optional property)
             pagination: true, //false
             language: "eng" // "eng"
         };
         
-        var ediTable = new EdiTable(tableId, tableSet);
+        var ediTable = new EdiTable(tableSet, data);
         
     </script>
 </body>

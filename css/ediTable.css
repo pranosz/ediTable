@@ -1,12 +1,10 @@
 
-html, body, ul {
+html, body, ul, input {
     margin: 0px;
     padding: 0px;
 }
-
-#yourTable, td {
-    border: 1px solid black;
-    margin: 20px;
+body {
+    background: #dcdbdb;
 }
 
 #btns-row-edit {
@@ -15,14 +13,14 @@ html, body, ul {
     width: 45px;
     padding: 0px;
     margin: 0px;
-    display: block;
+    display: none;
 }
 #btns-col-edit{
     position: absolute;
     height: 40px;
     padding: 0px;
     margin: 0px;
-    display: block;
+    display: none;
 }
 
 .circle-up {
@@ -156,3 +154,29 @@ html, body, ul {
     box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.25);
     color: #A6CCD5;
 }
+/*
+* Css style for table
+*/
+#yourTable {
+    margin: 20px;
+}
+
+.flat-table {
+  display: block;
+  font-family: sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-size: 100%;
+  overflow: auto;
+}
+  th {
+    background-color: rgb(112, 196, 105);
+    color: white;
+    font-weight: normal;
+    padding: 10px 20px;
+    text-align: center;
+  }
+  td {
+    background-color: rgb(238, 238, 238);
+    color: rgb(111, 111, 111);
+    padding: 10px 20px;
+  }

@@ -8,21 +8,27 @@
  */
 "use strict";
 
-function EdiTable(tableId, tableSet){
-    this._table = tableId;
+function EdiTable(tableSet, data){
+    this._data = data;
     this._contextmenu = null;
     this._rowBtns = null;
     this._colBtns = null;
     this._selectedRow = null;
     this._selectedCol = null;
     this._xPozCol = null;
+    this._ediType = null;
+    this._currentTd = null;
+    
+    this._generateTable();
+    this._table = document.getElementById("yourTable");
     
     var config = this._setConfig(tableSet);
     
     for(var opt in config){
         switch (opt){
             case "editType":
-                this._setEditType(config[opt]);
+                this._ediType = config[opt];
+                this._setEditType();
                 break;
             case "sorting":
                 this._setSorting(config[opt]);
@@ -44,6 +50,34 @@ function EdiTable(tableId, tableSet){
                 break;
         }
     }
+};
+/*
+ * _createTable
+ */
+EdiTable.prototype._createTable = function(){
+    var table = document.createElement("table");
+    table.setAttribute("id","yourTable");
+    table.insertRow(0);
+    this._data.tableData.forEach(function(col,i){
+        table.insertRow(i);
+    });
+    document.getElementsByTagName("Body")[0].insertBefore(table,document.getElementsByTagName("Body")[0].firstChild);
+    return table;
+};
+/*
+ * _generateTable
+ */
+EdiTable.prototype._generateTable = function(){
+    var table = this._createTable();
+    this._data.tableData.forEach(function(col,i){
+        var th = document.createElement("th");        
+        var textNode = document.createTextNode(col.th);
+        th.appendChild(textNode);
+        table.rows[0].appendChild(th);
+            col.td.forEach(function(cell,j){
+                table.rows[j+1].insertCell(i).innerHTML = cell;
+            });
+    });    
 };
 
 /*
@@ -81,10 +115,10 @@ EdiTable.prototype._setConfig = function(tableSet){
 /*
  * _setEditType
  */
-EdiTable.prototype._setEditType = function(ediType){
-    if(ediType === "context"){
+EdiTable.prototype._setEditType = function(){
+    if(this._ediType === "context"){
         this._addContextmenu();
-    }else if(ediType === "buttons"){
+    }else if(this._ediType === "buttons"){
         this._addBtns();
     }else {
         //none
@@ -164,7 +198,11 @@ EdiTable.prototype._addCol = function(side){
         index = this._selectedCol;
     }
     Array.prototype.forEach.call(r,function(row,i){
-        row.insertCell(index).innerHTML = "Ddefault";
+        if(i===0){
+            row.insertCell(index).outerHTML = "<th>Ddefault</th>";
+        }else{
+            row.insertCell(index).innerHTML = "Ddefault";
+        }
     });
 };
 /*
@@ -203,6 +241,10 @@ EdiTable.prototype._addEventsToButtons = function(){
             case "button-del-col":
                 owner._delCol();
             break;
+        }
+        if(owner._ediType === "buttons"){
+            owner._btnRowPosition();
+            owner._btnColPosition();
         }
     },false);
 };
@@ -353,12 +395,66 @@ EdiTable.prototype._btnColPosition = function(){
     this._colBtns.style.left = this._xPozCol+"px";
 };
 /*
+ * _setInput
+ */
+EdiTable.prototype._setInput = function(td){
+    var input = document.createElement("input");
+    this._currentTd = {
+        item:input, 
+        paddingBottom:td.style.paddingBottom,
+        paddingLeft:td.style.paddingLeft,
+        paddingRight:td.style.paddingRight,
+        paddingTop:td.style.paddingTop
+    };
+    td.style.padding = "0px";
+    input.style.height = (td.clientHeight-2)+"px";
+    input.style.width = (td.clientWidth-2)+"px";
+    input.style.border = "1px solid #e4e4e4";
+    input.style.background = "white";
+    input.setAttribute("type","text");
+    input.setAttribute("value",td.textContent);
+    td.innerHTML = "";
+    td.appendChild(input);
+    input.focus();
+};
+/*
+ * _cancelInput
+ */
+EdiTable.prototype._cancelInput = function(td){
+    var input = document.createElement("input");
+    var text = this._currentTd.item.value;
+    var textNode = document.createTextNode(text);
+    var parent = this._currentTd.item.parentNode;
+    parent.innerHTML = "";
+    parent.style.paddingBottom = this._currentTd.paddingBottom;
+    parent.style.paddingLeft = this._currentTd.paddingLeft;
+    parent.style.paddingRight = this._currentTd.paddingRight;
+    parent.style.paddingTop = this._currentTd.paddingTop;
+    parent.appendChild(textNode);
+    this._currentTd = null;
+};
+/*
  * _addEventToTRAndTH
  */
 EdiTable.prototype._addEventToTRAndTH = function(){
     var owner = this;
+    var body = document.querySelector("body");
     
-    document.querySelector("body").addEventListener("mouseover",function(e){
+    body.addEventListener("click",function(e){
+        var node = e.target.nodeName;  
+        
+        if(node === "TD" || node === "TH"){
+            console.dir(e.target);
+            owner._currentTd !== null ? owner._cancelInput():null;
+            owner._setInput(e.target);
+        }else if(node === "INPUT"){
+            
+        }else {
+            owner._currentTd !== null ? owner._cancelInput():null;
+        }
+    });
+    
+    body.addEventListener("mouseover",function(e){
         var node = e.target.nodeName;  
         if(node === "TD" || e.target.id === "btns-row-edit"){
             if(node === "TD"){
@@ -377,7 +473,7 @@ EdiTable.prototype._addEventToTRAndTH = function(){
             owner._colBtns.style.display = "block";
         }
     },false);
-    document.querySelector("body").addEventListener("mouseout",function(e){
+    body.addEventListener("mouseout",function(e){
         var node = e.target.nodeName;
         if(node === "TD"){
             owner._rowBtns.style.display = "none";
@@ -385,36 +481,6 @@ EdiTable.prototype._addEventToTRAndTH = function(){
             owner._colBtns.style.display = "none";
         }
     },false); 
-};
-/*
- * _addEventsToBtns
- */
-EdiTable.prototype._addEventsToBtns = function(){
-    var owner = this;
-    document.querySelector("body").addEventListener("click",function(e){
-    var node = e.target.classList.item(1);
-        switch(node){
-            case "button-add-row-up":
-                owner._addRow("U");
-            break;
-            case "button-add-row-down":
-                owner._addRow("D");
-            break;
-            case "button-del-row":
-                owner._delRow();
-            break;
-            case "button-add-col-right":
-                owner._addCol("R");
-            break;
-            case "button-add-col-left":
-                owner._addCol("L");
-            break;           
-            case "button-del-col":
-                owner._delCol();
-            break;
-        }
-     owner._btnRowPosition();
-    },false);
 };
 /*
  * _addBtns
@@ -430,5 +496,5 @@ EdiTable.prototype._addBtns = function(){
     ];
     this._drawButtons(blueprints);
     this._addEventToTRAndTH();
-    this._addEventsToBtns();
+    this._addEventsToButtons();
 };
