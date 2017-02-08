@@ -18,9 +18,11 @@ function EdiTable(tableSet, data){
     this._xPozCol = null;
     this._ediType = null;
     this._currentTd = null;
+    this._saveBtn = null;
     
     this._generateTable();
     this._table = document.getElementById("yourTable");
+    this._createSaveButton();
     
     var config = this._setConfig(tableSet);
     
@@ -52,13 +54,46 @@ function EdiTable(tableSet, data){
     }
 };
 /*
+ * 
+ * _showSaveBtn
+ */
+EdiTable.prototype._showSaveBtn = function(){
+  this._saveBtn.style.display = "block"; 
+};
+/*
+ * 
+ * _createSaveButton
+ */
+EdiTable.prototype._createSaveButton = function(){
+    var saveBtn = document.createElement("div");
+    var insideBtn = document.createElement("div");
+    var textNode = document.createTextNode("Save");
+    var a = document.createElement("a");
+    saveBtn.classList.add("btn-save");
+    insideBtn.classList.add("btn-save-inside");
+    a.appendChild(textNode);
+    insideBtn.appendChild(a);
+    saveBtn.appendChild(insideBtn);
+    this._saveBtn = saveBtn;
+    this._table.parentNode.insertBefore(saveBtn,null);
+    this._btnSavePosition();
+};
+/*
+ * 
+ * _btnSavePosition
+ */
+EdiTable.prototype._btnSavePosition = function(){
+    this._saveBtn.style.width = (this._table.clientWidth + this._table.offsetLeft)+"px";
+    this._saveBtn.style.top = (this._table.clientHeight + this._table.offsetTop)+"px";
+};
+/*
  * _createTable
  */
 EdiTable.prototype._createTable = function(){
     var table = document.createElement("table");
     table.setAttribute("id","yourTable");
     table.insertRow(0);
-    this._data.tableData.forEach(function(col,i){
+    this._data.tableData[0].td.forEach(function(col,i){
         table.insertRow(i);
     });
     document.getElementsByTagName("Body")[0].insertBefore(table,document.getElementsByTagName("Body")[0].firstChild);
@@ -77,7 +112,7 @@ EdiTable.prototype._generateTable = function(){
             col.td.forEach(function(cell,j){
                 table.rows[j+1].insertCell(i).innerHTML = cell;
             });
-    });    
+    });  
 };
 
 /*
@@ -179,12 +214,17 @@ EdiTable.prototype._addRow = function(side){
             newRow.insertCell(i).innerHTML = "Ddefault";
         });                
     }
+    this._showSaveBtn();
+    this._btnSavePosition();
 };
 /*
  * _delRow
  */
 EdiTable.prototype._delRow = function(){
     this._table.deleteRow(this._selectedRow);
+    this._isChange = true;
+    this._showSaveBtn();
+    this._btnSavePosition();
 };
 /*
  * _addCol
@@ -198,12 +238,15 @@ EdiTable.prototype._addCol = function(side){
         index = this._selectedCol;
     }
     Array.prototype.forEach.call(r,function(row,i){
+        
         if(i===0){
             row.insertCell(index).outerHTML = "<th>Ddefault</th>";
         }else{
             row.insertCell(index).innerHTML = "Ddefault";
         }
     });
+    this._showSaveBtn();
+    this._btnSavePosition();
 };
 /*
  * _delCol
@@ -214,6 +257,8 @@ EdiTable.prototype._delCol = function(){
     Array.prototype.forEach.call(r,function(row,i){
         row.deleteCell(index);
     });
+    this._showSaveBtn();
+    this._btnSavePosition();
 };
 /*
  * _addEventsToButtons
@@ -416,6 +461,7 @@ EdiTable.prototype._setInput = function(td){
     td.innerHTML = "";
     td.appendChild(input);
     input.focus();
+    this._showSaveBtn();
 };
 /*
  * _cancelInput
@@ -497,4 +543,10 @@ EdiTable.prototype._addBtns = function(){
     this._drawButtons(blueprints);
     this._addEventToTRAndTH();
     this._addEventsToButtons();
+};
+/**
+ * _saveTable
+ */
+EdiTable.prototype._saveTable = function(){
+    console.log("Save Table");
 };
