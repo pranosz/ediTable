@@ -9,7 +9,6 @@
 </head>
 <body>
     
-    <script src="js/event.js"></script>
     <script src="js/ediTable.js"></script>
     <script>
         
@@ -35,8 +34,15 @@
             language: "eng" // "eng"
         };
         
+        function callback(){
+            var savedData = ediTable.getSavedData();      
+            console.log(savedData);
+        }
+        
         var ediTable = new EdiTable(tableSet, data);
         
+        ediTable.onSaveBtn(callback);
+       
     </script>
 </body>
 </html>

@@ -181,16 +181,16 @@ body {
     padding: 10px 20px;
   }
   
-  .btn-save {
+  .btn-save-container {
       position: absolute;
       display: none;
   }
-  .btn-save-inside {
+  .btn-save-wrapper {
       margin: 0px auto;
       text-align: center;
   }
   
-  .btn-save-inside a {
+  .btn-save {
 	-moz-box-shadow:inset 0px 1px 0px 0px #9acc85;
 	-webkit-box-shadow:inset 0px 1px 0px 0px #9acc85;
 	box-shadow:inset 0px 1px 0px 0px #9acc85;
@@ -212,7 +212,7 @@ body {
 	padding:6px 12px;
 	text-decoration:none;
 }
- .btn-save-inside a:hover {
+ .btn-save:hover {
 	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #68a54b), color-stop(1, #74ad5a));
 	background:-moz-linear-gradient(top, #68a54b 5%, #74ad5a 100%);
 	background:-webkit-linear-gradient(top, #68a54b 5%, #74ad5a 100%);
@@ -222,7 +222,7 @@ body {
 	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#68a54b', endColorstr='#74ad5a',GradientType=0);
 	background-color:#68a54b;
 }
- .btn-save-inside a:active {
+ .btn-save:active {
 	position:relative;
         background:rgb(112, 196, 105);
 }

@@ -13,12 +13,14 @@ function EdiTable(tableSet, data){
     this._contextmenu = null;
     this._rowBtns = null;
     this._colBtns = null;
-    this._selectedRow = null;
+    this._selectedRowIndex = null;
+    this._selectedColIndex = null;
     this._selectedCol = null;
-    this._xPozCol = null;
     this._ediType = null;
     this._currentTd = null;
     this._saveBtn = null;
+    this._savedData = null;
+    this._buttons = null;
     
     this._generateTable();
     this._table = document.getElementById("yourTable");
@@ -65,17 +67,18 @@ EdiTable.prototype._showSaveBtn = function(){
  * _createSaveButton
  */
 EdiTable.prototype._createSaveButton = function(){
-    var saveBtn = document.createElement("div");
+    var saveCont = document.createElement("div");
     var insideBtn = document.createElement("div");
     var textNode = document.createTextNode("Save");
     var a = document.createElement("a");
-    saveBtn.classList.add("btn-save");
-    insideBtn.classList.add("btn-save-inside");
+    saveCont.classList.add("btn-save-container");
+    insideBtn.classList.add("btn-save-wrapper");
+    a.classList.add("btn-save");
     a.appendChild(textNode);
     insideBtn.appendChild(a);
-    saveBtn.appendChild(insideBtn);
-    this._saveBtn = saveBtn;
-    this._table.parentNode.insertBefore(saveBtn,null);
+    saveCont.appendChild(insideBtn);
+    this._saveBtn = saveCont;
+    this._table.parentNode.insertBefore(saveCont,null);
     this._btnSavePosition();
 };
 /*
@@ -202,26 +205,27 @@ EdiTable.prototype._addRow = function(side){
     var newRow = null;
     var index = null;
     var colums = null;
+    var owner = this;
     if(side === "U"){
-        index = this._selectedRow;
+        index = owner._selectedRowIndex;
     }else if(side === "D"){
-        index = this._selectedRow+1;
+        index = owner._selectedRowIndex+1;
     }
     if(index !== null){
-        newRow = this._table.insertRow(index);
-        colums = this._table.rows[0].cells;
+        newRow = owner._table.insertRow(index);
+        colums = owner._table.rows[0].cells;
         Array.prototype.forEach.call(colums,function(col,i){
-            newRow.insertCell(i).innerHTML = "Ddefault";
+            newRow.insertCell(i).innerHTML = "Default";
         });                
     }
-    this._showSaveBtn();
-    this._btnSavePosition();
+    owner._showSaveBtn();
+    owner._btnSavePosition();
 };
 /*
  * _delRow
  */
 EdiTable.prototype._delRow = function(){
-    this._table.deleteRow(this._selectedRow);
+    this._table.deleteRow(this._selectedRowIndex);
     this._isChange = true;
     this._showSaveBtn();
     this._btnSavePosition();
@@ -233,9 +237,9 @@ EdiTable.prototype._addCol = function(side){
     var index = null;
     var r = this._table.rows;
     if(side === "R"){
-        index = this._selectedCol + 1;
+        index = this._selectedColIndex + 1;
     }else if(side === "L"){
-        index = this._selectedCol;
+        index = this._selectedColIndex;
     }
     Array.prototype.forEach.call(r,function(row,i){
         
@@ -252,7 +256,7 @@ EdiTable.prototype._addCol = function(side){
  * _delCol
  */
 EdiTable.prototype._delCol = function(){
-    var index = this._selectedCol;
+    var index = this._selectedColIndex;
     var r = this._table.rows;
     Array.prototype.forEach.call(r,function(row,i){
         row.deleteCell(index);
@@ -261,35 +265,76 @@ EdiTable.prototype._delCol = function(){
     this._btnSavePosition();
 };
 /*
+ * _addEventToTRAndTH
+ */
+EdiTable.prototype._addEventToTRAndTH = function(){
+
+};
+/*
  * _addEventsToButtons
  */
 EdiTable.prototype._addEventsToButtons = function(){
     var owner = this;
-    document.querySelector("body").addEventListener("click",function(e){
-    var node = e.target.classList.item(1);
-        switch(node){
-            case "button-add-row-up":
-                owner._addRow("U");
-            break;
-            case "button-add-row-down":
-                owner._addRow("D");
-            break;
-            case "button-del-row":
-                owner._delRow();
-            break;
-            case "button-add-col-right":
-                owner._addCol("R");
-            break;
-            case "button-add-col-left":
-                owner._addCol("L");
-            break;           
-            case "button-del-col":
-                owner._delCol();
-            break;
+    var body = document.querySelector("body");
+    
+    body.addEventListener("click",function(e){
+        var node = e.target.nodeName;
+        var nodeClass = e.target.classList.item(0);
+        var param = null;
+        console.log(e.target.classList.item(0));
+        if(node === "DIV"){
+            return;
         }
-        if(owner._ediType === "buttons"){
-            owner._btnRowPosition();
-            owner._btnColPosition();
+        if(node === "TD" || node === "TH"){
+            owner._currentTd !== null ? owner._cancelInput():null;
+            owner._setInput(e.target);
+        }else if(node === "INPUT"){
+
+        }else if(nodeClass === "btn-arrows" || nodeClass === "btn-context"){
+
+            if(e.target.classList.item(1) !== null){
+                node = e.target.classList.item(1);
+            }else if(e.target.classList.item(0)){
+                node = e.target.classList.item(0);
+            }
+            param = owner._buttons[node].param;
+            owner._buttons[node].method.call(owner,param);
+
+            if(owner._ediType === "buttons"){
+                owner._btnRowPosition();
+                owner._btnColPosition();
+            }   
+        }else {
+            owner._currentTd !== null ? owner._cancelInput():null;
+        }
+    },false);
+    
+    body.addEventListener("mouseover",function(e){
+        var node = e.target.nodeName;  
+        if(node === "TD" || e.target.id === "btns-row-edit"){
+            if(node === "TD"){
+                owner._selectedRowIndex = e.target.parentNode.rowIndex;
+                owner._btnRowPosition();
+            }
+            owner._colBtns.style.display = "none";
+            owner._rowBtns.style.display = "block";
+        }else if(node === "TH" || e.target.id === "btns-col-edit"){
+            if(node === "TH"){
+                owner._selectedColIndex = e.target.cellIndex;
+                owner._selectedCol = e.target;
+                owner._btnColPosition();
+            }
+            owner._rowBtns.style.display = "none";
+            owner._colBtns.style.display = "block";
+        }
+    },false);
+    
+    this._table.addEventListener("mouseout",function(e){
+        var node = e.target.nodeName;
+        if(node === "TD"){
+            owner._rowBtns.style.display = "none";
+        }else if(node === "TH"){
+            owner._colBtns.style.display = "none";
         }
     },false);
 };
@@ -308,23 +353,24 @@ EdiTable.prototype._showContexmenu = function(){
 /*
  * _drawContextmenu
  */
-EdiTable.prototype._drawContextmenu = function(btns){
+EdiTable.prototype._drawContextmenu = function(){
     var div = document.createElement("div");
     var ul = document.createElement("ul");
+    var btns = this._buttons;
     
     div.classList.add("context");
     ul.classList.add("context-list");
     
-    btns.forEach(function(btn,i){
+    for(var prop in btns){
         var li = document.createElement("li");
         var b = document.createElement("button");
-        var text = document.createTextNode(btn.label);
+        var text = document.createTextNode(btns[prop].label);
         b.classList.add("btn-context");
-        b.classList.add(btn.class);
+        b.classList.add(prop);
         b.appendChild(text);
         li.appendChild(b);
         ul.appendChild(li);
-    });
+    };
     div.appendChild(ul);
     this._table.parentNode.insertBefore(div,null);
     this._contextmenu = document.querySelector(".context");    
@@ -343,8 +389,8 @@ EdiTable.prototype._addEventContextmenu = function(){
         if(node === "TH" || node === "TD"){
             e.preventDefault();
             owner._setContextPosition(e);
-            owner._selectedRow = e.target.parentNode.rowIndex;
-            owner._selectedCol = e.target.cellIndex;
+            owner._selectedRowIndex = e.target.parentNode.rowIndex;
+            owner._selectedColIndex = e.target.cellIndex;
             if(node === "TH"){
                 btnDis.classList.remove("btn-context");
                 btnDis.classList.add("btn-disabled");
@@ -380,42 +426,42 @@ EdiTable.prototype._setContextPosition = function(eventObj){
  * _addContextmenu
  */
 EdiTable.prototype._addContextmenu = function(){ 
-    var blueprints = [
-    {class: "button-add-row-up", label: "Add row above",function: this._addRow},
-    {class: "button-add-row-down", label: "Add row below",function: this._addRow},
-    {class: "button-del-row", label: "Delete row",function: this._delRow},
-    {class: "button-add-col-right", label: "Add column to right",function: this._addCol},
-    {class: "button-add-col-left", label: "Add column to left",function: this._addCol},
-    {class: "button-del-col", label: "Delete column",function: this._delCol}
-    ];
-    this._drawContextmenu(blueprints);
+    this._buttons = {
+        "button-add-row-up": {label: "Add row above", method: this._addRow, param:"U"},
+        "button-add-row-down": {label: "Add row below", method: this._addRow, param:"D"},
+        "button-del-row": {label: "Delete row", method: this._delRow, param:"DEL"},
+        "button-add-col-right": {label: "Add column to right", method: this._addCol, param:"R"},
+        "button-add-col-left": {label: "Add column to left", method: this._addCol, param:"L"},
+        "button-del-col": {label: "Delete column", method: this._delCol, param:"DEL"}
+    };
+    this._drawContextmenu();
     this._addEventContextmenu(); 
 };
 /*
  * 
  * ----------------------------Buttons------------------------
  */
-EdiTable.prototype._drawButtons = function(btns){
+EdiTable.prototype._drawButtons = function(){
+    var btns = this._buttons;
     var btnsRowBox = document.createElement("div");
     var btnsColBox = document.createElement("div");
     btnsRowBox.setAttribute("id","btns-row-edit");
     btnsColBox.setAttribute("id","btns-col-edit");
     
-    btns.forEach(function(btn,i){
+    for(var prop in btns){
         var circle = document.createElement("div");
         var button = document.createElement("button");
-        
-        circle.classList.add(btn.class[0]);
+        var rowORcol = prop.split("-");
+        circle.classList.add(btns[prop].class[0]);
         button.classList.add("btn-arrows");
-        button.classList.add(btn.class[1]);
-        
+        button.classList.add(prop);
         circle.appendChild(button);
-        if(i<3){
+        if(rowORcol[2] === "row"){
             btnsRowBox.appendChild(circle);  
         }else {
             btnsColBox.appendChild(circle);
         }
-    });
+    };
     
     this._table.parentNode.insertBefore(btnsRowBox,null);
     this._table.parentNode.insertBefore(btnsColBox,null);
@@ -426,9 +472,13 @@ EdiTable.prototype._drawButtons = function(btns){
  * _btnRowPosition
  */
 EdiTable.prototype._btnRowPosition = function(){
+    var currentRow = this._table.rows[Number(this._selectedRowIndex)];
+    if(typeof currentRow === "undefined"){
+        currentRow = this._table.rows[Number(this._selectedRowIndex)-1];
+    }
     var leftMarginStr = window.getComputedStyle(this._table).marginLeft;
     var leftMargin = Number(leftMarginStr.slice(0,leftMarginStr.length-2));
-    var offsetTop = this._table.rows[Number(this._selectedRow)].offsetTop+leftMargin;           
+    var offsetTop = currentRow.offsetTop+leftMargin;           
     this._rowBtns.style.top = offsetTop+"px";
     this._rowBtns.style.left = (this._table.rows[0].clientWidth)+"px";
 };
@@ -436,8 +486,13 @@ EdiTable.prototype._btnRowPosition = function(){
  * _btnColPosition
  */
 EdiTable.prototype._btnColPosition = function(){
+    var currentCol = this._table.rows[0].cells[this._selectedColIndex];
+    if(typeof currentCol === "undefined"){
+        currentCol = this._table.rows[0].cells[this._selectedColIndex-1];
+    }
+    var xPozCol = currentCol.offsetLeft+(currentCol.clientWidth/2);
     this._colBtns.style.top = "0px";
-    this._colBtns.style.left = this._xPozCol+"px";
+    this._colBtns.style.left = xPozCol+"px";
 };
 /*
  * _setInput
@@ -479,74 +534,115 @@ EdiTable.prototype._cancelInput = function(td){
     parent.appendChild(textNode);
     this._currentTd = null;
 };
-/*
- * _addEventToTRAndTH
- */
-EdiTable.prototype._addEventToTRAndTH = function(){
-    var owner = this;
-    var body = document.querySelector("body");
-    
-    body.addEventListener("click",function(e){
-        var node = e.target.nodeName;  
-        
-        if(node === "TD" || node === "TH"){
-            console.dir(e.target);
-            owner._currentTd !== null ? owner._cancelInput():null;
-            owner._setInput(e.target);
-        }else if(node === "INPUT"){
-            
-        }else {
-            owner._currentTd !== null ? owner._cancelInput():null;
-        }
-    });
-    
-    body.addEventListener("mouseover",function(e){
-        var node = e.target.nodeName;  
-        if(node === "TD" || e.target.id === "btns-row-edit"){
-            if(node === "TD"){
-                owner._selectedRow = e.target.parentNode.rowIndex;
-                owner._btnRowPosition();
-            }
-            owner._colBtns.style.display = "none";
-            owner._rowBtns.style.display = "block";
-        }else if(node === "TH" || e.target.id === "btns-col-edit"){
-            if(node === "TH"){
-                owner._xPozCol = e.target.offsetLeft+(e.target.clientWidth/2);
-                owner._selectedCol = e.target.cellIndex;
-                owner._btnColPosition();
-            }
-            owner._rowBtns.style.display = "none";
-            owner._colBtns.style.display = "block";
-        }
-    },false);
-    body.addEventListener("mouseout",function(e){
-        var node = e.target.nodeName;
-        if(node === "TD"){
-            owner._rowBtns.style.display = "none";
-        }else if(node === "TH"){
-            owner._colBtns.style.display = "none";
-        }
-    },false); 
-};
+
 /*
  * _addBtns
  */
 EdiTable.prototype._addBtns = function(){
-    var blueprints = [
-    {class: ["circle-up","button-add-row-up"], label: "",function: this._addRow},
-    {class: ["circle-down","button-add-row-down"], label: "",function: this._addRow},
-    {class: ["circle-delete-row","button-del-row"], label: "",function: this._delRow},
-    {class: ["circle-left","button-add-col-left"], label: "",function: this._addCol},
-    {class: ["circle-delete","button-del-col"], label: "",function: this._delCol},
-    {class: ["circle-right","button-add-col-right"], label: "",function: this._addCol}
-    ];
-    this._drawButtons(blueprints);
-    this._addEventToTRAndTH();
+    this._buttons = {
+        "button-add-row-up": {class: ["circle-up"], label: "",method: this._addRow, param:"U"},
+        "button-add-row-down": {class: ["circle-down"], label: "",method: this._addRow, param:"D"},
+        "button-del-row": {class: ["circle-delete-row"], label: "",method: this._delRow, param:"DEL"},
+        "button-add-col-left": {class: ["circle-left"], label: "",method: this._addCol, param:"L"},
+        "button-del-col": {class: ["circle-delete"], label: "",method: this._delCol, param:"DEL"},
+        "button-add-col-right": {class: ["circle-right"], label: "",method: this._addCol, param:"R"}
+    };
+    this._drawButtons();
+    //this._addEventToTRAndTH();
     this._addEventsToButtons();
+};
+/*
+ * 
+ * @returns {undefined}
+ */
+EdiTable.prototype._getDataFromTable = function(){
+    var tdArr = [];
+    var td = [];
+    Array.prototype.forEach.call(this._table.rows, function(row){
+        Array.prototype.forEach.call(row.cells, function(col){
+                td.push(col.outerText);
+        });
+        tdArr.push(td);
+        td = [];
+    });
+    return tdArr;  
+};
+/*
+ * 
+ * @returns {undefined}
+ */
+EdiTable.prototype._createColObj = function(th,td){
+    var obj = {"th":null,"td":null};
+    obj.th = th;
+    obj.td = td;
+    return obj;
+};
+/*
+ * 
+ * @returns {undefined}
+ */
+EdiTable.prototype._createColArr = function(arr){
+    var colArray = [];
+    arr[0].forEach(function(col,i){
+            colArray.push([]);
+    });
+    return colArray;
+};
+/*
+ * 
+ * @returns {undefined}
+ */
+EdiTable.prototype._saveToObj = function(colArr){
+    var owner = this;
+    var th = null;
+    var td = [];
+    var obj = {tableData:[]};
+    colArr.forEach(function(col,i){
+            th = col[0];
+            td = col.slice(1,col.length);
+            obj.tableData.push(owner._createColObj(th,td));
+    });
+    return obj;
+};
+/*
+ * 
+ * getSavedData
+ */
+EdiTable.prototype.getSavedData = function(){
+    this._saveTable();
+    return this._savedData;
 };
 /**
  * _saveTable
  */
 EdiTable.prototype._saveTable = function(){
-    console.log("Save Table");
+    var tableData = this._getDataFromTable();
+    var arrLength = tableData.length;
+    var colNum = tableData[0].length;
+    var data = null;
+    var dataObj = null;
+    var dataJson = null;
+    var colArr = this._createColArr(tableData);
+    for (var i = 0; i < arrLength; i++) {
+        for (var j = 0; j < colNum; j++) {
+            data = (typeof(tableData[i][j]) !== "undefined"?tableData[i][j]:"");
+            colArr[j].push(data);
+        }
+    } 
+    dataObj = this._saveToObj(colArr);
+    this._savedData = JSON.stringify(dataObj);
+};
+/*
+ * 
+ */
+EdiTable.prototype.onSaveBtn = function(callback){
+    if(typeof callback === "function"){
+        var listener = document.querySelector(".btn-save").addEventListener("click",function(e){
+        var node = e.target.classList.item(0);
+            if(node === "btn-save"){
+                callback();
+            }
+        },false); 
+        return listener;
+    }
 };
