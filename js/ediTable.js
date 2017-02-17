@@ -61,6 +61,7 @@ function EdiTable(tableSet, data){
  */
 EdiTable.prototype._showSaveBtn = function(){
   this._saveBtn.style.display = "block"; 
+  this._btnSavePosition();
 };
 /*
  * 
@@ -219,16 +220,16 @@ EdiTable.prototype._addRow = function(side){
         });                
     }
     owner._showSaveBtn();
-    owner._btnSavePosition();
 };
 /*
  * _delRow
  */
 EdiTable.prototype._delRow = function(){
-    this._table.deleteRow(this._selectedRowIndex);
-    this._isChange = true;
-    this._showSaveBtn();
-    this._btnSavePosition();
+    if(this._selectedRowIndex>1){
+        this._table.deleteRow(this._selectedRowIndex);
+        this._isChange = true;
+        this._showSaveBtn();
+    }
 };
 /*
  * _addCol
@@ -250,26 +251,21 @@ EdiTable.prototype._addCol = function(side){
         }
     });
     this._showSaveBtn();
-    this._btnSavePosition();
 };
 /*
  * _delCol
  */
 EdiTable.prototype._delCol = function(){
-    var index = this._selectedColIndex;
-    var r = this._table.rows;
-    Array.prototype.forEach.call(r,function(row,i){
-        row.deleteCell(index);
-    });
-    this._showSaveBtn();
-    this._btnSavePosition();
+    if(this._selectedColIndex>=1){
+        var index = this._selectedColIndex;
+        var r = this._table.rows;
+        Array.prototype.forEach.call(r,function(row,i){
+            row.deleteCell(index);
+        });
+        this._showSaveBtn();
+    }
 };
-/*
- * _addEventToTRAndTH
- */
-EdiTable.prototype._addEventToTRAndTH = function(){
 
-};
 /*
  * _addEventsToButtons
  */
@@ -278,37 +274,35 @@ EdiTable.prototype._addEventsToButtons = function(){
     var body = document.querySelector("body");
     
     body.addEventListener("click",function(e){
+        var classArr = e.target.className.split(" ");
         var node = e.target.nodeName;
-        var nodeClass = e.target.classList.item(0);
+        var nodeClass = null;
         var param = null;
-        console.log(e.target.classList.item(0));
-        if(node === "DIV"){
-            return;
-        }
+        var btn = null;
+        
+        classArr.forEach(function(cl,i){
+            if(cl.indexOf("btn") !== -1){
+                nodeClass = cl;
+            }else if(cl.indexOf("button") !== -1){
+                btn = cl;
+            }
+        });
         if(node === "TD" || node === "TH"){
             owner._currentTd !== null ? owner._cancelInput():null;
             owner._setInput(e.target);
         }else if(node === "INPUT"){
 
         }else if(nodeClass === "btn-arrows" || nodeClass === "btn-context"){
-
-            if(e.target.classList.item(1) !== null){
-                node = e.target.classList.item(1);
-            }else if(e.target.classList.item(0)){
-                node = e.target.classList.item(0);
-            }
-            param = owner._buttons[node].param;
-            owner._buttons[node].method.call(owner,param);
-
-            if(owner._ediType === "buttons"){
-                owner._btnRowPosition();
-                owner._btnColPosition();
-            }   
+            param = owner._buttons[btn].param;
+            owner._buttons[btn].method.call(owner,param);
+            owner._btnRowPosition();
+            owner._btnColPosition(); 
         }else {
             owner._currentTd !== null ? owner._cancelInput():null;
         }
     },false);
     
+    if(this._ediType === "buttons"){
     body.addEventListener("mouseover",function(e){
         var node = e.target.nodeName;  
         if(node === "TD" || e.target.id === "btns-row-edit"){
@@ -337,6 +331,7 @@ EdiTable.prototype._addEventsToButtons = function(){
             owner._colBtns.style.display = "none";
         }
     },false);
+    }
 };
 /*
  * _showMenu
@@ -376,29 +371,41 @@ EdiTable.prototype._drawContextmenu = function(){
     this._contextmenu = document.querySelector(".context");    
 };
 /*
+ * 
+ * @returns {undefined}
+ */
+EdiTable.prototype._disabledBtn = function(btnArr,isDisabled){
+    var class1 = (isDisabled === true ? "btn-context" : "btn-disabled");
+    var class2 = (isDisabled === true ? "btn-disabled" : "btn-context");
+   // if(typeof btnArr === "Array"){
+        btnArr.forEach(function(btn,i){
+            btn.classList.remove(class1);
+            btn.classList.add(class2);
+            btn.disabled = isDisabled;
+        });
+   // }
+};
+/*
  * _addEventContextmenu
  */
-EdiTable.prototype._addEventContextmenu = function(){
-    
+EdiTable.prototype._addEventContextmenu = function(){  
     this._t = 1;
     var owner = this;
     
     this._table.addEventListener("contextmenu",function(e){
         var node = e.target.nodeName;
-        var btnDis = document.querySelector(".button-add-row-up");
+        var btnUp = document.querySelector(".button-add-row-up");
+        var btnDel = document.querySelector(".button-del-row");
+        var btns = [btnUp,btnDel];
         if(node === "TH" || node === "TD"){
             e.preventDefault();
             owner._setContextPosition(e);
             owner._selectedRowIndex = e.target.parentNode.rowIndex;
             owner._selectedColIndex = e.target.cellIndex;
             if(node === "TH"){
-                btnDis.classList.remove("btn-context");
-                btnDis.classList.add("btn-disabled");
-                btnDis.disabled = true;
+                owner._disabledBtn(btns,true);
             }else if(node === "TD"){
-                btnDis.classList.remove("btn-disabled");
-                btnDis.classList.add("btn-context");
-                btnDis.disabled = false;
+                owner._disabledBtn(btns,false);
             }
             owner._showContexmenu();
         }
@@ -469,30 +476,52 @@ EdiTable.prototype._drawButtons = function(){
     this._colBtns = document.querySelector("#btns-col-edit");
 };
 /*
+ * 
+ * @returns {undefined}
+ */
+EdiTable.prototype._setRowIndex = function(){
+    var row = this._table.rows[Number(this._selectedRowIndex)];
+    if(typeof row === "undefined"){
+        this._selectedRowIndex = (this._selectedRowIndex > 1 ? this._selectedRowIndex-1:1);    
+    }
+};
+/*
+ * 
+ * @returns {undefined}
+ */
+EdiTable.prototype._setColIndex = function(){
+    var col = this._table.rows[0].cells[this._selectedColIndex];
+    if(typeof col === "undefined"){
+        this._selectedColIndex = (this._selectedColIndex >= 1 ? this._selectedColIndex-1:0); 
+    }
+};
+/*
  * _btnRowPosition
  */
 EdiTable.prototype._btnRowPosition = function(){
-    var currentRow = this._table.rows[Number(this._selectedRowIndex)];
-    if(typeof currentRow === "undefined"){
-        currentRow = this._table.rows[Number(this._selectedRowIndex)-1];
+    if(this._ediType === "buttons"){
+        var currentRow, offsetTop;
+        var leftMarginStr = window.getComputedStyle(this._table).marginLeft;
+        var leftMargin = Number(leftMarginStr.slice(0,leftMarginStr.length-2));
+        this._setRowIndex();
+        currentRow = this._table.rows[Number(this._selectedRowIndex)];
+        offsetTop = currentRow.offsetTop+leftMargin;
+        this._rowBtns.style.top = offsetTop+"px";
+        this._rowBtns.style.left = (this._table.rows[0].clientWidth)+"px";
     }
-    var leftMarginStr = window.getComputedStyle(this._table).marginLeft;
-    var leftMargin = Number(leftMarginStr.slice(0,leftMarginStr.length-2));
-    var offsetTop = currentRow.offsetTop+leftMargin;           
-    this._rowBtns.style.top = offsetTop+"px";
-    this._rowBtns.style.left = (this._table.rows[0].clientWidth)+"px";
 };
 /*
  * _btnColPosition
  */
 EdiTable.prototype._btnColPosition = function(){
-    var currentCol = this._table.rows[0].cells[this._selectedColIndex];
-    if(typeof currentCol === "undefined"){
-        currentCol = this._table.rows[0].cells[this._selectedColIndex-1];
+    if(this._ediType === "buttons"){
+        var currentCol, xPozCol;
+        this._setColIndex();
+        currentCol = this._table.rows[0].cells[this._selectedColIndex];
+        xPozCol = currentCol.offsetLeft+(currentCol.clientWidth/2);
+        this._colBtns.style.top = "0px";
+        this._colBtns.style.left = xPozCol+"px";
     }
-    var xPozCol = currentCol.offsetLeft+(currentCol.clientWidth/2);
-    this._colBtns.style.top = "0px";
-    this._colBtns.style.left = xPozCol+"px";
 };
 /*
  * _setInput
