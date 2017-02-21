@@ -7,8 +7,7 @@
    <title>EdiTable</title>
    <link href="css/ediTable.css" rel="stylesheet" type="text/css"/>
 </head>
-<body>
-    
+<body>    
     <script src="js/ediTable.js"></script>
     <script>
         
@@ -35,12 +34,22 @@
         };
         
         function callback(){
-            var savedData = ediTable.getSavedData();      
+            var savedData = ediTable.getSavedData();
+            var item = document.getElementsByClassName("btn-save-container")[0];
+            var nodetext = document.createTextNode(savedData);
+            var divJson = document.createElement("pre");
+            divJson.className = "display-json";
+            console.log(item.childNodes[1]);
+            if(item.childNodes[1]){
+                item.removeChild(item.childNodes[1]);
+            }
+            divJson.appendChild(nodetext);
+            item.appendChild(divJson);
             console.log(savedData);
         }
         
-        var ediTable = new EdiTable(tableSet, data);
-        
+        var ediTable = new EdiTable(tableSet, data);  
+        ediTable.editMode(false);
         ediTable.onSaveBtn(callback);
        
     </script>

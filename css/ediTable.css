@@ -226,3 +226,13 @@ body {
 	position:relative;
         background:rgb(112, 196, 105);
 }
+
+
+.display-json {
+    margin: 10px;
+    padding: 5px;
+    font-family: tahoma, arial;
+    font-size: 14px;
+    color: #7e827e;
+    line-height: 170%;
+}

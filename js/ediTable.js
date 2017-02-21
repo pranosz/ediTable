@@ -21,10 +21,11 @@ function EdiTable(tableSet, data){
     this._saveBtn = null;
     this._savedData = null;
     this._buttons = null;
-    
     this._generateTable();
     this._table = document.getElementById("yourTable");
-    this._createSaveButton();
+    this._rowsNum = this._table.rows.length;
+    this._cellsNum = this._table.rows[0].cells.length;
+    this._createButton("Save","btn-save");
     
     var config = this._setConfig(tableSet);
     
@@ -32,7 +33,6 @@ function EdiTable(tableSet, data){
         switch (opt){
             case "editType":
                 this._ediType = config[opt];
-                this._setEditType();
                 break;
             case "sorting":
                 this._setSorting(config[opt]);
@@ -57,24 +57,39 @@ function EdiTable(tableSet, data){
 };
 /*
  * 
+ * @returns {undefined}
+ */
+EdiTable.prototype.editMode = function(t){
+    if(t === true){
+        this._setEditType();
+        this._showSaveBtn();
+    }else {
+        
+    }
+};
+/*
+ * 
  * _showSaveBtn
  */
 EdiTable.prototype._showSaveBtn = function(){
   this._saveBtn.style.display = "block"; 
   this._btnSavePosition();
 };
+EdiTable.prototype._crateEditButton = function(){
+    this._createButton("Edit table","btn-edit");
+}
 /*
  * 
- * _createSaveButton
+ * _createButton
  */
-EdiTable.prototype._createSaveButton = function(){
+EdiTable.prototype._createButton = function(text,className){
     var saveCont = document.createElement("div");
     var insideBtn = document.createElement("div");
-    var textNode = document.createTextNode("Save");
+    var textNode = document.createTextNode(text);
     var a = document.createElement("a");
     saveCont.classList.add("btn-save-container");
     insideBtn.classList.add("btn-save-wrapper");
-    a.classList.add("btn-save");
+    a.classList.add(className);
     a.appendChild(textNode);
     insideBtn.appendChild(a);
     saveCont.appendChild(insideBtn);
@@ -116,7 +131,7 @@ EdiTable.prototype._generateTable = function(){
             col.td.forEach(function(cell,j){
                 table.rows[j+1].insertCell(i).innerHTML = cell;
             });
-    });  
+    });
 };
 
 /*
@@ -217,18 +232,20 @@ EdiTable.prototype._addRow = function(side){
         colums = owner._table.rows[0].cells;
         Array.prototype.forEach.call(colums,function(col,i){
             newRow.insertCell(i).innerHTML = "Default";
-        });                
+        });  
+        this._btnSavePosition();
     }
-    owner._showSaveBtn();
 };
 /*
  * _delRow
  */
 EdiTable.prototype._delRow = function(){
-    if(this._selectedRowIndex>1){
+    if(this._rowsNum>2){
         this._table.deleteRow(this._selectedRowIndex);
         this._isChange = true;
         this._showSaveBtn();
+        this._rowsNum = this._table.rows.length;
+        this._btnSavePosition();
     }
 };
 /*
@@ -250,19 +267,20 @@ EdiTable.prototype._addCol = function(side){
             row.insertCell(index).innerHTML = "Ddefault";
         }
     });
-    this._showSaveBtn();
+    this._btnSavePosition();
 };
 /*
  * _delCol
  */
 EdiTable.prototype._delCol = function(){
-    if(this._selectedColIndex>=1){
+    if(this._cellsNum>1){
         var index = this._selectedColIndex;
         var r = this._table.rows;
         Array.prototype.forEach.call(r,function(row,i){
             row.deleteCell(index);
         });
-        this._showSaveBtn();
+        this._cellsNum = this._table.rows[0].cells.length;
+        this._btnSavePosition();
     }
 };
 
@@ -545,7 +563,6 @@ EdiTable.prototype._setInput = function(td){
     td.innerHTML = "";
     td.appendChild(input);
     input.focus();
-    this._showSaveBtn();
 };
 /*
  * _cancelInput
@@ -659,10 +676,10 @@ EdiTable.prototype._saveTable = function(){
         }
     } 
     dataObj = this._saveToObj(colArr);
-    this._savedData = JSON.stringify(dataObj);
+    this._savedData = JSON.stringify(dataObj,undefined,15);
 };
 /*
- * 
+ * Public method onSaveBtn
  */
 EdiTable.prototype.onSaveBtn = function(callback){
     if(typeof callback === "function"){
