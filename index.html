@@ -8,50 +8,12 @@
    <link href="css/ediTable.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>    
+    <div class="btn-edit-container">
+        <div class="btn-edit-wrapper">
+            <a class="btn-edit">Edit Table</a>
+        </div>
+    </div>
     <script src="js/ediTable.js"></script>
-    <script>
-        
-        /*
-         * Expected usage of component
-         */
-        
-        var data = {tableData:[
-                {th:"check",td:["true","true","false","true"],type:"string"},
-                {th:"Num",td:[1,2,3,4],type:"number"},
-                {th:"Name",td:["Piotr","Robert","Kamil","Marcin"],type:"string"},
-                {th:"Surname",td:["Kowalski","Nowak","Noname","Długosz"],type:"string"},
-                {th:"Position",td:["Programista","Księgowy","Sportowiec","Sportowiec"],type:"string"},
-                {th:"Telephone",td:["699-399-234","324-567-901","",""],type:"string"}
-        ]};
-
-        var tableSet = {
-            editType: "buttons", // context, buttons, none
-            sorting: false, // false
-            exportCSV: true, // false
-          //  colToSort: [0,1], // choice column to sort (optional property)
-            pagination: true, //false
-            language: "eng" // "eng"
-        };
-        
-        function callback(){
-            var savedData = ediTable.getSavedData();
-            var item = document.getElementsByClassName("btn-save-container")[0];
-            var nodetext = document.createTextNode(savedData);
-            var divJson = document.createElement("pre");
-            divJson.className = "display-json";
-            console.log(item.childNodes[1]);
-            if(item.childNodes[1]){
-                item.removeChild(item.childNodes[1]);
-            }
-            divJson.appendChild(nodetext);
-            item.appendChild(divJson);
-            console.log(savedData);
-        }
-        
-        var ediTable = new EdiTable(tableSet, data);  
-        ediTable.editMode(false);
-        ediTable.onSaveBtn(callback);
-       
-    </script>
+    <script src="js/yourJsFile.js"></script>
 </body>
 </html>

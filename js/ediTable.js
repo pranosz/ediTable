@@ -26,6 +26,9 @@ function EdiTable(tableSet, data){
     this._rowsNum = this._table.rows.length;
     this._cellsNum = this._table.rows[0].cells.length;
     this._createButton("Save","btn-save");
+    this._onClickBtnEdit = this._onClickBtnEdit.bind(this);
+    this._onMouseOverBtnEdit = this._onMouseOverBtnEdit.bind(this);
+    this._onMouseOutBtnEdit = this._onMouseOutBtnEdit.bind(this);
     
     var config = this._setConfig(tableSet);
     
@@ -37,21 +40,6 @@ function EdiTable(tableSet, data){
             case "sorting":
                 this._setSorting(config[opt]);
                 break;
-            case "exportCSV":
-                this._setCSV(config[opt]);
-                break;
-            case "defaultCss":
-                this._setDefaultCss(config[opt]);
-                break;
-            case "colToSort":
-                this._setColToSort(config[opt]);
-                break;
-            case "pagination":
-                this._setPagination(config[opt]);
-                break;
-            case "language":
-                this._setLanguage(config[opt]);
-                break;
         }
     }
 };
@@ -60,11 +48,20 @@ function EdiTable(tableSet, data){
  * @returns {undefined}
  */
 EdiTable.prototype.editMode = function(t){
+    var body = document.querySelector("body");
     if(t === true){
         this._setEditType();
         this._showSaveBtn();
     }else {
-        
+        this._hideSaveBtn();
+        this._currentTd !== null ? this._cancelInput():null;
+        if(this._colBtns !== null && this._rowBtns !== null){
+            this._colBtns.style.display = "none";
+            this._rowBtns.style.display = "none";           
+        }
+        body.removeEventListener("click", this._onClickBtnEdit);
+        body.removeEventListener("mouseover", this._onMouseOverBtnEdit);
+        this._table.removeEventListener("mouseout", this._onMouseOutBtnEdit);
     }
 };
 /*
@@ -75,6 +72,11 @@ EdiTable.prototype._showSaveBtn = function(){
   this._saveBtn.style.display = "block"; 
   this._btnSavePosition();
 };
+
+EdiTable.prototype._hideSaveBtn = function(){
+  this._saveBtn.style.display = "none"; 
+};
+
 EdiTable.prototype._crateEditButton = function(){
     this._createButton("Edit table","btn-edit");
 }
@@ -126,7 +128,15 @@ EdiTable.prototype._generateTable = function(){
     this._data.tableData.forEach(function(col,i){
         var th = document.createElement("th");        
         var textNode = document.createTextNode(col.th);
-        th.appendChild(textNode);
+        if(col.sort === true){
+            var a = document.createElement("a");
+            a.setAttribute("href","#");
+            a.appendChild(textNode);
+            th.appendChild(a);
+            th.classList.add("btn-sort");
+        }else {
+            th.appendChild(textNode);
+        }
         table.rows[0].appendChild(th);
             col.td.forEach(function(cell,j){
                 table.rows[j+1].insertCell(i).innerHTML = cell;
@@ -178,42 +188,20 @@ EdiTable.prototype._setEditType = function(){
         //none
     }
 };
+EdiTable.prototype._addEventToHeaders = function(){
+    var sortBtns = document.getElementsByClassName("btn-sort");
+    Array.prototype.forEach.call(sortBtns,function(btn,i){
+        console.log("sortBtns "+btn.nodeName);
+    });
+};
 /*
  * _setSorting
  */
-EdiTable.prototype._setSorting = function(state){
-    //this._sorting(state);
+EdiTable.prototype._setSorting = function(){
+    this._addEventToHeaders();
+    //this._addGraphicsToHeaders();
 };
-/*
- * _setCSV
- */
-EdiTable.prototype._setCSV = function(){
-    
-};
-/*
- * _setDefaultCss
- */
-EdiTable.prototype._setDefaultCss = function(){
-    
-};
-/*
- * _setColToSort
- */
-EdiTable.prototype._setColToSort = function(){
-    
-};
-/*
- * _setPagination
- */
-EdiTable.prototype._setPagination = function(){
-    
-};
-/*
- * _setLanguage
- */
-EdiTable.prototype._setLanguage = function(){
-    
-};
+
 /*
  * _addRow
  */
@@ -284,14 +272,7 @@ EdiTable.prototype._delCol = function(){
     }
 };
 
-/*
- * _addEventsToButtons
- */
-EdiTable.prototype._addEventsToButtons = function(){
-    var owner = this;
-    var body = document.querySelector("body");
-    
-    body.addEventListener("click",function(e){
+EdiTable.prototype._onClickBtnEdit = function(e){
         var classArr = e.target.className.split(" ");
         var node = e.target.nodeName;
         var nodeClass = null;
@@ -306,49 +287,62 @@ EdiTable.prototype._addEventsToButtons = function(){
             }
         });
         if(node === "TD" || node === "TH"){
-            owner._currentTd !== null ? owner._cancelInput():null;
-            owner._setInput(e.target);
+            this._currentTd !== null ? this._cancelInput():null;
+            this._setInput(e.target);
         }else if(node === "INPUT"){
 
         }else if(nodeClass === "btn-arrows" || nodeClass === "btn-context"){
-            param = owner._buttons[btn].param;
-            owner._buttons[btn].method.call(owner,param);
-            owner._btnRowPosition();
-            owner._btnColPosition(); 
+            param = this._buttons[btn].param;
+            this._buttons[btn].method.call(this,param);
+            this._btnRowPosition();
+            this._btnColPosition(); 
         }else {
-            owner._currentTd !== null ? owner._cancelInput():null;
+            this._currentTd !== null ? this._cancelInput():null;
         }
-    },false);
+    };
     
-    if(this._ediType === "buttons"){
-    body.addEventListener("mouseover",function(e){
-        var node = e.target.nodeName;  
+EdiTable.prototype._onMouseOverBtnEdit = function(e){
+        var node = e.target.nodeName; 
+        
         if(node === "TD" || e.target.id === "btns-row-edit"){
             if(node === "TD"){
-                owner._selectedRowIndex = e.target.parentNode.rowIndex;
-                owner._btnRowPosition();
+                this._selectedRowIndex = e.target.parentNode.rowIndex;
+                this._btnRowPosition();
             }
-            owner._colBtns.style.display = "none";
-            owner._rowBtns.style.display = "block";
+            this._colBtns.style.display = "none";
+            this._rowBtns.style.display = "block";
         }else if(node === "TH" || e.target.id === "btns-col-edit"){
             if(node === "TH"){
-                owner._selectedColIndex = e.target.cellIndex;
-                owner._selectedCol = e.target;
-                owner._btnColPosition();
+                this._selectedColIndex = e.target.cellIndex;
+                this._selectedCol = e.target;
+                this._btnColPosition();
             }
-            owner._rowBtns.style.display = "none";
-            owner._colBtns.style.display = "block";
+            this._rowBtns.style.display = "none";
+            this._colBtns.style.display = "block";
         }
-    },false);
+    };
     
-    this._table.addEventListener("mouseout",function(e){
+EdiTable.prototype._onMouseOutBtnEdit = function(e){
         var node = e.target.nodeName;
+        
         if(node === "TD"){
-            owner._rowBtns.style.display = "none";
+            this._rowBtns.style.display = "none";
         }else if(node === "TH"){
-            owner._colBtns.style.display = "none";
+            this._colBtns.style.display = "none";
         }
-    },false);
+    };
+
+/*
+ * _addEventsToButtons
+ */
+EdiTable.prototype._addEventsToButtons = function(){
+    var body = document.querySelector("body");
+    
+    body.addEventListener("click", this._onClickBtnEdit, false);
+    
+    if(this._ediType === "buttons"){
+        body.addEventListener("mouseover", this._onMouseOverBtnEdit, false); 
+        this._table.addEventListener("mouseout", this._onMouseOutBtnEdit, false);
     }
 };
 /*
@@ -567,8 +561,8 @@ EdiTable.prototype._setInput = function(td){
 /*
  * _cancelInput
  */
-EdiTable.prototype._cancelInput = function(td){
-    var input = document.createElement("input");
+EdiTable.prototype._cancelInput = function(){
+    //var input = document.createElement("input");
     var text = this._currentTd.item.value;
     var textNode = document.createTextNode(text);
     var parent = this._currentTd.item.parentNode;
