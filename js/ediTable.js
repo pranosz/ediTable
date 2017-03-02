@@ -22,13 +22,19 @@ function EdiTable(tableSet, data){
     this._savedData = null;
     this._buttons = null;
     this._generateTable();
+    this._sortMemory = null;
     this._table = document.getElementById("yourTable");
     this._rowsNum = this._table.rows.length;
     this._cellsNum = this._table.rows[0].cells.length;
     this._createButton("Save","btn-save");
+    this._rowsArr = [];
+    this._rows = document.getElementById("yourTable").rows;
+    this._rowsArr = Array.prototype.slice.call(this._rows);
+    this._rowsArr.shift();
     this._onClickBtnEdit = this._onClickBtnEdit.bind(this);
     this._onMouseOverBtnEdit = this._onMouseOverBtnEdit.bind(this);
     this._onMouseOutBtnEdit = this._onMouseOutBtnEdit.bind(this);
+    this._onSortBtn = this._onSortBtn.bind(this);
     
     var config = this._setConfig(tableSet);
     
@@ -52,6 +58,7 @@ EdiTable.prototype.editMode = function(t){
     if(t === true){
         this._setEditType();
         this._showSaveBtn();
+        this._table.removeEventListener("click", this._onSortBtn, false);
     }else {
         this._hideSaveBtn();
         this._currentTd !== null ? this._cancelInput():null;
@@ -62,6 +69,7 @@ EdiTable.prototype.editMode = function(t){
         body.removeEventListener("click", this._onClickBtnEdit);
         body.removeEventListener("mouseover", this._onMouseOverBtnEdit);
         this._table.removeEventListener("mouseout", this._onMouseOutBtnEdit);
+        this._table.addEventListener("click", this._onSortBtn, false);
     }
 };
 /*
@@ -129,11 +137,19 @@ EdiTable.prototype._generateTable = function(){
         var th = document.createElement("th");        
         var textNode = document.createTextNode(col.th);
         if(col.sort === true){
+            var sDiv = document.createElement("div");
             var a = document.createElement("a");
             a.setAttribute("href","#");
             a.appendChild(textNode);
             th.appendChild(a);
-            th.classList.add("btn-sort");
+            th.appendChild(sDiv);
+            sDiv.classList.add("sort-array");
+            a.classList.add("btn-sort");
+            if(col.type === "string"){
+                a.classList.add("sort-text");
+            }else if(col.type === "number"){
+                a.classList.add("sort-number");
+            }
         }else {
             th.appendChild(textNode);
         }
@@ -188,17 +204,11 @@ EdiTable.prototype._setEditType = function(){
         //none
     }
 };
-EdiTable.prototype._addEventToHeaders = function(){
-    var sortBtns = document.getElementsByClassName("btn-sort");
-    Array.prototype.forEach.call(sortBtns,function(btn,i){
-        console.log("sortBtns "+btn.nodeName);
-    });
-};
 /*
  * _setSorting
  */
 EdiTable.prototype._setSorting = function(){
-    this._addEventToHeaders();
+   // this._addEventToHeaders();
     //this._addGraphicsToHeaders();
 };
 
@@ -272,18 +282,104 @@ EdiTable.prototype._delCol = function(){
     }
 };
 
+EdiTable.prototype._isClassExists = function(item,cName){
+    var classArr = item.className.split(" ");
+    var find = false;
+    classArr.forEach(function(cl){
+        if(cl === cName){
+            find = true;
+        }
+    });  
+    return find;
+};
+
+EdiTable.prototype._removeSortMarks = function(){
+    var sDivs = this._table.getElementsByClassName("sort-array");
+    var owner = this;
+    Array.prototype.forEach.call(sDivs,function(div){
+        owner._isClassExists(div,"sort-array-down") ? div.classList.remove("sort-array-down") : null;
+        owner._isClassExists(div,"sort-array-up") ? div.classList.remove("sort-array-up") : null;
+    });
+    
+};
+
+EdiTable.prototype._setSortMark = function(colIndex, order){
+    var sDiv = this._table.rows[0].cells[colIndex].getElementsByTagName("div")[0];
+    var sortClass = null;
+    this._removeSortMarks();
+    switch(order) {
+        case 1:
+            sortClass = "sort-array-up";
+        break;
+        case -1:
+            sortClass = "sort-array-down";
+        break;
+        case 0:
+            sortClass = null;
+        break;  
+    }
+    if(sortClass !== null){
+        sDiv.classList.add(sortClass);
+    }
+};
+
+EdiTable.prototype._sortText = function(colIndex,order){
+    var owner = this;
+    var tempArr = Array.prototype.slice.call(this._table.rows);
+    tempArr.shift();
+    this._setSortMark(colIndex, order);
+    if(order !== 0){
+        tempArr.sort(function(a,b){
+            a = a.cells[colIndex].textContent;
+            b = b.cells[colIndex].textContent;
+            return a > b;
+        });
+        tempArr = (order === 1?tempArr:tempArr.reverse());
+        tempArr.forEach(function(row){
+            owner._table.appendChild(row);
+        });
+    }else {
+        tempArr.forEach(function(row,i){
+            owner._table.appendChild(owner._rowsArr[i]);
+        });
+    }
+};
+
+EdiTable.prototype._sortNum = function(colIndex,order){
+    var owner = this;
+    var tempArr = Array.prototype.slice.call(this._table.rows);
+    tempArr.shift();
+    this._setSortMark(colIndex, order);
+        if(order !== 0){
+        tempArr.sort(function(a,b){
+            a = Number(a.cells[colIndex].textContent);
+            b = Number(b.cells[colIndex].textContent);
+            return (a - b)*order;
+        });
+        tempArr.forEach(function(row){
+            owner._table.appendChild(row);
+        });
+    }else {
+        tempArr.forEach(function(row,i){
+            owner._table.appendChild(owner._rowsArr[i]);
+        });
+    }
+};
+
 EdiTable.prototype._onClickBtnEdit = function(e){
         var classArr = e.target.className.split(" ");
         var node = e.target.nodeName;
         var nodeClass = null;
         var param = null;
         var btn = null;
-        
+
         classArr.forEach(function(cl,i){
             if(cl.indexOf("btn") !== -1){
                 nodeClass = cl;
             }else if(cl.indexOf("button") !== -1){
                 btn = cl;
+            }else if(cl.indexOf("sort-") !== -1){
+                sort = cl;
             }
         });
         if(node === "TD" || node === "TH"){
@@ -323,15 +419,50 @@ EdiTable.prototype._onMouseOverBtnEdit = function(e){
     };
     
 EdiTable.prototype._onMouseOutBtnEdit = function(e){
-        var node = e.target.nodeName;
-        
-        if(node === "TD"){
-            this._rowBtns.style.display = "none";
-        }else if(node === "TH"){
-            this._colBtns.style.display = "none";
-        }
-    };
+    var node = e.target.nodeName;
+    if(node === "TD"){
+        this._rowBtns.style.display = "none";
+    }else if(node === "TH"){
+        this._colBtns.style.display = "none";
+    }
+};
 
+/*
+ * 
+ * @returns {undefined}
+ */
+EdiTable.prototype._onSortBtn = function(e){
+    var classArr = e.target.className.split(" ");
+    var node = e.target.nodeName;
+    var sortSteps = [1,-1,0];
+    var sort = null;
+    var colIndex = null;
+    var th = null;
+    var order = null;
+    
+    if(node === "A"){
+       th = e.target.parentNode;
+       
+       colIndex = th.cellIndex;
+       classArr.forEach(function(cl){
+            if(cl.indexOf("sort-") !== -1){
+                sort = cl;
+            }
+        }); 
+        if(this._sortMemory === th.cellIndex){
+            th.counter = (th.counter >= 2 ? 0 : th.counter + 1);
+        }else {
+            th.counter = 0;
+        }
+        this._sortMemory = th.cellIndex;
+        order = sortSteps[th.counter];
+    }
+    if(sort === "sort-text"){
+        this._sortText(colIndex,order);
+    }else if(sort === "sort-number"){
+        this._sortNum(colIndex,order);
+    }
+};
 /*
  * _addEventsToButtons
  */

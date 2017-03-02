@@ -1,7 +1,7 @@
  
 var data = {tableData:[
         {th:"check",td:["true","true","false","true"],type:"string",sort:true},
-        {th:"Num",td:[1,2,3,4],type:"number",sort:true},
+        {th:"Num",td:[1,2,12,4],type:"number",sort:true},
         {th:"Name",td:["Piotr","Robert","Kamil","Marcin"],type:"string",sort:true},
         {th:"Surname",td:["Kowalski","Nowak","Noname","Długosz"],type:"string",sort:true},
         {th:"Position",td:["Programista","Księgowy","Sportowiec","Sportowiec"],type:"string"},
