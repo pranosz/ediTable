@@ -5,16 +5,22 @@ var data = {tableData:[
         {th:"Name",td:["Piotr","Robert","Kamil","Marcin"],type:"string",sort:true},
         {th:"Surname",td:["Kowalski","Nowak","Noname","Długosz"],type:"string",sort:true},
         {th:"Position",td:["Programista","Księgowy","Sportowiec","Sportowiec"],type:"string"},
-        {th:"Telephone",td:["699-399-234","324-567-901","",""],type:"string"}
+        {th:"Telephone",td:["699-399-234","324-567-901","",""],type:"string"},
+        {th:"Example",td:["One","Two","Three","Four"],type:"string",sort:true},
+        {th:"Cars",td:["Renault","Fiat","Ferrari","Peugeot"],type:"string"},
+        {th:"Count",td:[12,3,23,1],type:"number"}
 ]};
-
 var tableSet = {
     editType: "buttons", // context, buttons
     sorting: false // false
 };
 
+var ediTable = new EdiTable(tableSet, data);  
+var set = true;
+
+
 function callback(){
-    var savedData = ediTable.getSavedData();
+    var savedData = ediTable.savedData();
     var item = document.getElementsByClassName("btn-save-container")[0];
     var nodetext = document.createTextNode(savedData);
     var divJson = document.createElement("pre");
@@ -26,15 +32,20 @@ function callback(){
     item.appendChild(divJson);
 }
 
-var set = true;
-var ediTable = new EdiTable(tableSet, data);  
 ediTable.editMode(false);
 ediTable.onSaveBtn(callback);
 
+/*
+ * Button "Edit Table"
+ */
+var btnTableEdit = document.getElementsByClassName("btn-edit-container")[0];
+var table = document.getElementById("yourTable");
+btnTableEdit.parentNode.insertBefore(btnTableEdit,table);
 
-document.getElementsByClassName("btn-edit")[0].addEventListener("click",function(e){
+btnTableEdit.addEventListener("click",function(e){
     var node = e.target.classList.item(0);
         if(node === "btn-edit"){
+            console.log("btn-edit "+set);
             ediTable.editMode(set);
             set = (set === true ? false : true);
         }   
