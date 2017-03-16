@@ -1,17 +1,14 @@
  
 var data = {tableData:[
         {th:"check",td:["true","true","false","true"],type:"string",sort:true},
-        {th:"Num",td:[1,2,12,4],type:"number",sort:true},
+        {th:"Numbers",td:[1,2,12,4],type:"number",sort:true},
         {th:"Name",td:["Piotr","Robert","Kamil","Marcin"],type:"string",sort:true},
         {th:"Surname",td:["Kowalski","Nowak","Noname","Długosz"],type:"string",sort:true},
-        {th:"Position",td:["Programista","Księgowy","Sportowiec","Sportowiec"],type:"string"},
+        {th:"Position",td:["Programmer","Accountant","Police officer","Athlete"],type:"string"},
         {th:"Telephone",td:["699-399-234","324-567-901","",""],type:"string"},
-        {th:"Example",td:["One","Two","Three","Four"],type:"string",sort:true},
-        {th:"Cars",td:["Renault","Fiat","Ferrari","Peugeot"],type:"string"},
-        {th:"Count",td:[12,3,23,1],type:"number"}
 ]};
 var tableSet = {
-    editType: "buttons", // context, buttons
+    editType: "context", // context, buttons
     sorting: false // false
 };
 

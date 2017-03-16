@@ -286,7 +286,7 @@ pre {
 /*
 * Sorting array
 */
-.sort-array {
+.sort-arrow {
     width: 0px;
     height: 0px; 
     border-left: 5px solid transparent;
@@ -299,10 +299,10 @@ pre {
     visibility: hidden;
 }
 
-.sort-array-up {
+.sort-arrow-up {
     visibility: visible;
 }
-.sort-array-down {
+.sort-arrow-down {
     visibility: visible;
     transform: rotateX(180deg);
 }
@@ -320,6 +320,10 @@ pre {
 
 .edit-sort-show {
     display: block;
+}
+
+.edit-sort-hide {
+    display: none;
 }
 
 .edit-sort label {

@@ -54,10 +54,8 @@ function EdiTable(tableSet, data){
 };
 
 EdiTable.prototype._addSortingBtn = function(){
-    //var theader = this._table.getElementsByTagName("th");
     var owner = this;
     Array.prototype.forEach.call(owner._headers,function(col,i){ 
-        //console.log(col);
         var textNode = document.createTextNode(owner._data.tableData[i].th);
         if(owner._data.tableData[i].sort === true){
                 var sDiv = document.createElement("div");
@@ -67,7 +65,7 @@ EdiTable.prototype._addSortingBtn = function(){
                 a.appendChild(textNode);
                 col.appendChild(a);
                 col.appendChild(sDiv);
-                sDiv.classList.add("sort-array");
+                sDiv.classList.add("sort-arrow");
                 a.classList.add("btn-sort");
                 if(owner._data.tableData[i].type === "string"){
                     a.classList.add("sort-text");
@@ -206,7 +204,6 @@ EdiTable.prototype._createTable = function(){
  */
 EdiTable.prototype._generateTable = function(){
     var table = this._createTable();
-    //var saveButton = document.getElementsByClassName("btn-save-container")[0];
     this._table = document.getElementById("yourTable");
     this._data.tableData.forEach(function(col,i){
         var th = document.createElement("th");
@@ -226,11 +223,6 @@ EdiTable.prototype._generateTable = function(){
 EdiTable.prototype._defaultSet = {
     editType: "context", // buttons, none
     sorting: true, // false
-    exportCSV: false, // false
-    defaultCss: true, // false
-    colToSort: [], // choice column to sort (optional property)
-    pagination: true, //false
-    language: "pl" // "eng"
 };
 
 /*
@@ -348,11 +340,11 @@ EdiTable.prototype._isClassExists = function(item,cName){
 };
 
 EdiTable.prototype._removeSortMarks = function(){
-    var sDivs = this._table.getElementsByClassName("sort-array");
+    var sDivs = this._table.getElementsByClassName("sort-arrow");
     var owner = this;
     Array.prototype.forEach.call(sDivs,function(div){
-        owner._isClassExists(div,"sort-array-down") ? div.classList.remove("sort-array-down") : null;
-        owner._isClassExists(div,"sort-array-up") ? div.classList.remove("sort-array-up") : null;
+        owner._isClassExists(div,"sort-arrow-down") ? div.classList.remove("sort-arrow-down") : null;
+        owner._isClassExists(div,"sort-arrow-up") ? div.classList.remove("sort-arrow-up") : null;
     });  
 };
 
@@ -362,10 +354,10 @@ EdiTable.prototype._setSortMark = function(colIndex, order){
     this._removeSortMarks();
     switch(order) {
         case 1:
-            sortClass = "sort-array-up";
+            sortClass = "sort-arrow-up";
         break;
         case -1:
-            sortClass = "sort-array-down";
+            sortClass = "sort-arrow-down";
         break;
         case 0:
             sortClass = null;
@@ -418,18 +410,7 @@ EdiTable.prototype._sortNum = function(colIndex,order){
         });
     }
 };
-/*
-EdiTable.prototype._addSortEditBtn = function(th){
-    var div = document.createElement("div");
-    var colId = th.cellIndex;
-    div.classList.add("edit-sort");
-    console.log(this._data.tableData[colId].sort);
-    var checked = (this._data.tableData[colId].sort ? "checked" : "");
-    div.innerHTML = "<label for='isSorting'>Sorting<input type='checkbox' name='isSorting' "+checked+"></label>";
-    th.appendChild(div);
-    div.style.bottom = th.offsetHeight+"px";
-};
-*/
+
 EdiTable.prototype._addSortEditBtn = function(){
     var owner = this;
     var headers = this._table.rows[0].cells;
@@ -447,25 +428,29 @@ EdiTable.prototype._addSortEditBtn = function(){
         if(col.getElementsByClassName("edit-sort").length === 0){
             div = document.createElement("div");
             div.classList.add("edit-sort");
+            if(owner._ediType === "context") div.classList.add("edit-sort-hide");
             div.innerHTML = "<label for='isSorting'>Sorting<input type='checkbox' name='isSorting' value="+srtValue+" "+checked+"></label>";
             div.style.left = owner._sortEditBoxPozX;
             div.style.bottom = owner._sortEditBoxPozY;
             col.appendChild(div);            
         }
     });
-    this._updateSortEditBtnValue();
 };
 
 EdiTable.prototype._setOnOffSorting = function(){
-    
+    var th = this._table.rows[0].cells[this._selectedColIndex];
+    var contextMenu = document.getElementsByClassName("button-sorting")[0];
+    var arrText = contextMenu.textContent.split(" ");
+    var sortVal = th.querySelector('input[type=checkbox]').value;
+    contextMenu.textContent = arrText[0]+" "+(sortVal === "true"?"OFF":"ON"); 
 };
 
-EdiTable.prototype._updateSortEditBtnValue = function(){
-   this._table.addEventListener("change",function(e){
-       if(e.target.type === "checkbox"){
-           e.target.value = e.target.checked;
-       }
-   });
+EdiTable.prototype._updateSortEditValue = function(){
+    var th = this._table.rows[0].cells[this._selectedColIndex];
+    var input = th.querySelector('input[type=checkbox]');
+    var inputValue = input.value;
+    input.value = (inputValue === "true" ? "false" : "true");
+    this._setOnOffSorting();
 };
 
 EdiTable.prototype._onClickBtnEdit = function(e){
@@ -484,8 +469,7 @@ EdiTable.prototype._onClickBtnEdit = function(e){
     if(node === "TD" || node === "TH"){
         this._currentTd !== null ? this._cancelInput():null;
         this._setInput(e.target);
-        if(node === "TH"){
-            //console.dir(sDiv);     
+        if(node === "TH"){    
         }
     }else if(nodeClass === "btn-arrows" || nodeClass === "btn-context"){
         param = this._buttons[btn].param;
@@ -542,8 +526,7 @@ EdiTable.prototype._onSortBtn = function(e){
     var order = null;
     
     if(node === "A"){
-       th = e.target.parentNode;
-       
+       th = e.target.parentNode; 
        colIndex = th.cellIndex;
        classArr.forEach(function(cl){
             if(cl.indexOf("sort-") !== -1){
@@ -640,7 +623,9 @@ EdiTable.prototype._addEventContextmenu = function(){
         var node = e.target.nodeName;
         var btnUp = document.querySelector(".button-add-row-up");
         var btnDel = document.querySelector(".button-del-row");
+        var sort = document.querySelector(".button-sorting");
         var btns = [btnUp,btnDel];
+        var sortBtn = [sort];
         if(node === "TH" || node === "TD"){
             e.preventDefault();
             owner._setContextPosition(e);
@@ -648,9 +633,12 @@ EdiTable.prototype._addEventContextmenu = function(){
             owner._selectedColIndex = e.target.cellIndex;
             if(node === "TH"){
                 owner._disabledBtn(btns,true);
+                owner._disabledBtn(sortBtn,false);
             }else if(node === "TD"){
                 owner._disabledBtn(btns,false);
+                owner._disabledBtn(sortBtn,true);
             }
+            owner._setOnOffSorting();
             owner._showContexmenu();
         }
     },false);
@@ -678,7 +666,7 @@ EdiTable.prototype._setContextPosition = function(eventObj){
  */
 EdiTable.prototype._addContextmenu = function(){ 
     this._buttons = {
-        "button-sorting": {label: "Add sorting", method: this._addRow},
+        "button-sorting": {label: "Sorting OFF", method: this._updateSortEditValue},
         "button-add-row-up": {label: "Add row above", method: this._addRow, param:"U"},
         "button-add-row-down": {label: "Add row below", method: this._addRow, param:"D"},
         "button-del-row": {label: "Delete row", method: this._delRow, param:"DEL"},
