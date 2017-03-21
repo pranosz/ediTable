@@ -1,28 +1,36 @@
-/*
- * document.createDocumentFragment();
- */
-/*
+/**
  * EdiTable
  * 
- * To do - describe component
+ * EdiTable is a component which adds to the standard html table sorting 
+ * functionality and enable the edit mode. Edit mode allow you to add or delete 
+ * rows or columns. You can edit content in each cells in the table and also 
+ * you can set which column should have (or not) a sorting functionality. 
+ * After finishing editing, you should press "Save" button, if you want to save changes. 
+ * After that you can get table data in JSON format using "savedData" method.   
+ * You can choose one of the two way of editing mode ("buttons" or "context"). 
+ * If you choice "buttons" your editing mode get buttons for each rows and 
+ * columns whe you rollover rows or columns (headers). But if you choose 
+ * "contentmenu"  your editing mode will works when you click right button 
+ * of the mouse on rows or columns (headers).
  * 
- * @param:String {tableId} id attribute of table in which we want use "EdiTable" component
- * @param:Object {tableSet} a set of parameters that we want to send to "EdiTable" component
+ * @param {string} editType / buttons or contextmenu
+ * @param {json} data / data table 
+ * @returns {EdiTable}
  */
 "use strict";
-
-function EdiTable(tableSet, data){
+function EdiTable(data,editType){
+    this._body = document.querySelector("body");
     this._data = data;
     this._contextmenu = null;
     this._headers = null;
-    this._rowBtns = null;
-    this._colBtns = null;
+    this.rowBtns = null;
+    this.colBtns = null;
     this._selectedRowIndex = null;
     this._selectedColIndex = null;
     this._selectedCol = null;
-    this._ediType = null;
+    this.ediType = editType;
     this._currentTd = null;
-    this._saveBtn = null;
+    this.saveBtn = null;
     this._savedData = null;
     this._buttons = null;
     this._sortMemory = null;
@@ -33,52 +41,46 @@ function EdiTable(tableSet, data){
     this._sortEditBoxPozY = null;
     this._rows = null;
     this._rowsArr = [];
-    this._onClickBtnEdit = this._onClickBtnEdit.bind(this);
-    this._onMouseOverBtnEdit = this._onMouseOverBtnEdit.bind(this);
-    this._onMouseOutBtnEdit = this._onMouseOutBtnEdit.bind(this);
-    this._onSortBtn = this._onSortBtn.bind(this);
-
-    var config = this._setConfig(tableSet);
-    this._generateTable();
-    
-    for(var opt in config){
-        switch (opt){
-            case "editType":
-                this._ediType = config[opt];
-                break;
-            case "sorting":
-                this._setSorting(config[opt]);
-                break;
-        }
-    }
+    this.onClickBtnEdit = this.onClickBtnEdit.bind(this);
+    this.onMouseOverBtnEdit = this.onMouseOverBtnEdit.bind(this);
+    this.onMouseOutBtnEdit = this.onMouseOutBtnEdit.bind(this);
+    this.onSortBtn = this.onSortBtn.bind(this);
+    this.generateTable();
 };
-
-EdiTable.prototype._addSortingBtn = function(){
+/**
+ * addSortingBtns / This method adds sorting to the table headers.
+ * @returns {undefined}
+ */
+EdiTable.prototype.addSortingBtns = function(){
     var owner = this;
     Array.prototype.forEach.call(owner._headers,function(col,i){ 
         var textNode = document.createTextNode(owner._data.tableData[i].th);
         if(owner._data.tableData[i].sort === true){
-                var sDiv = document.createElement("div");
-                var a = document.createElement("a");
-                col.innerText = "";
-                a.setAttribute("href","#");
-                a.appendChild(textNode);
-                col.appendChild(a);
-                col.appendChild(sDiv);
-                sDiv.classList.add("sort-arrow");
-                a.classList.add("btn-sort");
-                if(owner._data.tableData[i].type === "string"){
-                    a.classList.add("sort-text");
-                }else if(owner._data.tableData[i].type === "number"){
-                    a.classList.add("sort-number");
-                }
+            var sDiv = document.createElement("div");
+            var a = document.createElement("a");
+            col.innerText = "";
+            a.setAttribute("href","#");
+            a.appendChild(textNode);
+            col.appendChild(a);
+            col.appendChild(sDiv);
+            sDiv.classList.add("sort-arrow");
+            a.classList.add("btn-sort");
+            if(owner._data.tableData[i].type === "string"){
+                a.classList.add("sort-text");
+            }else if(owner._data.tableData[i].type === "number"){
+                a.classList.add("sort-number");
+            }
         }else if(col.innerText === ""){
             col.appendChild(textNode);
         }
     });
+    this._table.addEventListener("click", this.onSortBtn, false);
 };
-
-EdiTable.prototype._removeSortingBtn = function(){
+/**
+ * removeSortingBtn / Removes sorting from table header.
+ * @returns {undefined}
+ */
+EdiTable.prototype.removeSortingBtn = function(){
     var sortBtns = this._table.getElementsByClassName("btn-sort");
     if(sortBtns.length > 0){
         while(sortBtns.length){
@@ -87,78 +89,99 @@ EdiTable.prototype._removeSortingBtn = function(){
             }
         }
     }
+    this._table.removeEventListener("click", this.onSortBtn, false);
 };
-/*
- * _setSorting
- */
-EdiTable.prototype._setSorting = function(t){
-    /*
-    if(t){
-        this._table.addEventListener("click", this._onSortBtn, false);
-        this._addSortingBtn();
-    }else {
-        this._table.removeEventListener("click", this._onSortBtn, false);
-        this._removeSortingBtn();
-    }*/
-};
-/*
- * 
+/**
+ * editMode / Switches to edit mode.
+ * @param {bolean} t / If "true" the edit mode is activated, in other case not.
  * @returns {undefined}
  */
 EdiTable.prototype.editMode = function(t){
-    var body = document.querySelector("body");
     var mode = (typeof(t) === "undefined" ? false : t);
     if(mode === true){
-        this._removeSortingBtn();
-        this._setEditType();
-        this._showSaveBtn();
-        this._table.removeEventListener("click", this._onSortBtn, false);
+        this.removeSortingBtn();
+        this.setEditType(); // contextmenu or buttons
+        this.addSortEditBtn();
+        this.showSaveBtn();
     }else {
-        this._generateTable();
-        this._addSortingBtn();
-        this._hideSaveBtn();
-        this._currentTd !== null ? this._cancelInput():null;
-        if(this._colBtns !== null && this._rowBtns !== null){
-            this._colBtns.style.display = "none";
-            this._rowBtns.style.display = "none";           
-        }
-        body.removeEventListener("click", this._onClickBtnEdit);
-        body.removeEventListener("mouseover", this._onMouseOverBtnEdit);
-        this._table.removeEventListener("mouseout", this._onMouseOutBtnEdit);
-        this._table.addEventListener("click", this._onSortBtn, false);
+        this.generateTable();
+        this.hideSaveBtn();
+        this.cancelInput();
+        this.displayBtnRowCol("none","none");
+        this.removeEventsOfBtnsEdit();
+        this.addSortingBtns();
     }
 };
-/*
- * 
- * _showSaveBtn
+/**
+ * setEditType
+ * @returns {undefined}
  */
-EdiTable.prototype._showSaveBtn = function(){
-  this._saveBtn.style.display = "block"; 
-  this._btnSavePosition();
+EdiTable.prototype.setEditType = function(){
+    if(this.ediType === "contextmenu"){
+        this.addContextmenu();
+    }else if(this.ediType === "buttons"){
+        this.addBtns();
+    }else {
+        //none
+    }
 };
-
-EdiTable.prototype._hideSaveBtn = function(){
-  this._saveBtn.style.display = "none"; 
+/**
+ * displayBtnRowCol / Method show or hide buttons for adding or deleting rows and columns. 
+ * @param {string} row / "none" or "block"
+ * @param {string} col / "none" or "block"
+ * @returns {undefined}
+ */
+EdiTable.prototype.displayBtnRowCol = function(row,col){
+    if(this.rowBtns !== null){
+        this.rowBtns.style.display = row;           
+    }
+    if(this.colBtns  !== null){
+        this.colBtns.style.display = col;
+    }
 };
-
-EdiTable.prototype._createBtnWrapper = function(){
-    var container = document.getElementsByClassName("btn-save-container")[0];
+/**
+ * showSaveBtn
+ * @returns {undefined}
+ */
+EdiTable.prototype.showSaveBtn = function(){
+  this.saveBtn.style.display = "block"; 
+  this.btnSavePosition();
+};
+/**
+ * hideSaveBtn
+ * @returns {undefined}
+ */
+EdiTable.prototype.hideSaveBtn = function(){
+  this.saveBtn.style.display = "none"; 
+};
+/**
+ * createBtnWrapper / Method first create container (if doesn't exist) 
+ *                    for a button and then creates button wrapper.
+ * @param {string} containerName
+ * @param {string} wrapperName
+ * @returns {undefined}
+ */
+EdiTable.prototype.createBtnWrapper = function(containerName, wrapperName){
+    var container = document.getElementsByClassName(containerName)[0];
     if(!container){
         var saveCont = document.createElement("div");
         var insideBtn = document.createElement("div");
-        saveCont.classList.add("btn-save-container");
-        insideBtn.classList.add("btn-save-wrapper");  
+        saveCont.classList.add(containerName);
+        insideBtn.classList.add(wrapperName);  
         saveCont.appendChild(insideBtn);
         this._table.parentNode.insertBefore(saveCont,null);
-        this._saveBtn = saveCont;
+        this.saveBtn = saveCont;
     }
 }
-/*
- * 
- * _createButton
+/**
+ * createButton 
+ * @param {string} text / button text.
+ * @param {string} className / button class.
+ * @param {string} btnWrapper / button wrapper name.
+ * @returns {undefined}
  */
-EdiTable.prototype._createButton = function(text,className){
-    var insideBtn = document.getElementsByClassName("btn-save-wrapper")[0];
+EdiTable.prototype.createButton = function(text,className,btnWrapper){
+    var insideBtn = document.getElementsByClassName(btnWrapper)[0];
     var textNode = document.createTextNode(text);
     var a = document.createElement("a");
     a.classList.add(className);
@@ -166,44 +189,50 @@ EdiTable.prototype._createButton = function(text,className){
     if(insideBtn){
         insideBtn.appendChild(a);
     }
-    this._btnSavePosition();
+    this.btnSavePosition();
 };
-/*
- * 
- * _btnSavePosition
+/**
+ * btnSavePosition / Taking into account the width and hight of the table, 
+ *                   method calculate position of the "save" button.
+ * @returns {undefined}
  */
-EdiTable.prototype._btnSavePosition = function(){
-    this._saveBtn.style.width = (this._table.clientWidth + this._table.offsetLeft)+"px";
-    this._saveBtn.style.top = (this._table.clientHeight + this._table.offsetTop)+"px";
+EdiTable.prototype.btnSavePosition = function(){
+    this.saveBtn.style.width = (this._table.clientWidth + this._table.offsetLeft)+"px";
+    this.saveBtn.style.top = (this._table.clientHeight + this._table.offsetTop)+"px";
 };
-/*
- * _createTable
+/**
+ * removeTable / Remove table (if exist) and "save" button.
+ * @returns {undefined}
  */
-EdiTable.prototype._createTable = function(){  
+EdiTable.prototype.removeTable = function(){ 
     var btnSave = null;
-    var body = document.getElementsByTagName("Body")[0];
     if(this._table){
         btnSave = document.getElementsByClassName("btn-save")[0];
         this._table.parentNode.removeChild(this._table);
         btnSave.parentNode.removeChild(btnSave);
     };
+};
+/**
+ * createTable / Creates an empty table.
+ * @returns {EdiTable.prototype.createTable.table|Element}
+ */
+EdiTable.prototype.createTable = function(){  
+    this.removeTable();
     var table = document.createElement("table");
     table.setAttribute("id","yourTable");
     table.insertRow(0);
-    /*
-     * Why can not remove col from forEach loop
-     */
     this._data.tableData[0].td.forEach(function(col,i){
         table.insertRow(i);
     });
-    body.insertBefore(table,body.firstChild);
+    this._body.insertBefore(table,this._body.firstChild);
     return table;
 };
-/*
- * _generateTable
+/**
+ * generateTable / Fills a table with data from JSON object (this._table).
+ * @returns {undefined}
  */
-EdiTable.prototype._generateTable = function(){
-    var table = this._createTable();
+EdiTable.prototype.generateTable = function(){
+    var table = this.createTable();
     this._table = document.getElementById("yourTable");
     this._data.tableData.forEach(function(col,i){
         var th = document.createElement("th");
@@ -212,89 +241,53 @@ EdiTable.prototype._generateTable = function(){
             table.rows[j+1].insertCell(i).innerHTML = cell;
         });
     });
-    this._setTableProperties();
-    this._createBtnWrapper();
-    this._createButton("Save","btn-save");
+    this.setTableProperties();
+    this.createBtnWrapper("btn-save-container","btn-save-wrapper");
+    this.createButton("Save","btn-save","btn-save-wrapper");
 };
 
-/*
- * Default settings
+/**
+ * addRow
+ * @param {string} tier / Under or above.
+ * @returns {undefined}
  */
-EdiTable.prototype._defaultSet = {
-    editType: "context", // buttons, none
-    sorting: true, // false
-};
-
-/*
- * _setConfig - compare user settings with default settings.
- * If user doesn't set one of the values then it's taken from 
- * defaults config.
- * 
- * @param:object {tableSet} user config
- * @return:object {defaultCopy} updated the default configuration of user configuration
- */
-EdiTable.prototype._setConfig = function(tableSet){
-    var defaultCopy = JSON.parse(JSON.stringify(this._defaultSet));
-    
-    for(var opt in defaultCopy){
-        if(opt in tableSet){
-            defaultCopy[opt] = tableSet[opt];
-        } 
-    }
-    return defaultCopy;
-};
-
-/*
- * _setEditType
- */
-EdiTable.prototype._setEditType = function(){
-    if(this._ediType === "context"){
-        this._addContextmenu();
-        this._addSortEditBtn();
-    }else if(this._ediType === "buttons"){
-        this._addBtns();
-        this._addSortEditBtn();
-    }else {
-        //none
-    }
-};
-/*
- * _addRow
- */
-EdiTable.prototype._addRow = function(side){
+EdiTable.prototype.addRow = function(tier){
     var newRow = null;
     var index = null;
     var colums = null;
     var owner = this;
-    if(side === "U"){
+    if(tier === "A"){
         index = owner._selectedRowIndex;
-    }else if(side === "D"){
+    }else if(tier === "U"){
         index = owner._selectedRowIndex+1;
     }
     if(index !== null){
         newRow = owner._table.insertRow(index);
         colums = owner._table.rows[0].cells;
-        Array.prototype.forEach.call(colums,function(col,i){
+        Array.prototype.forEach.call(colums,function(i){
             newRow.insertCell(i).innerHTML = "Default";
         });  
-        this._btnSavePosition();
+        this.btnSavePosition();
     }
 };
-/*
- * _delRow
+/**
+ * delRow
+ * @returns {undefined}
  */
-EdiTable.prototype._delRow = function(){
-    if(this._rowsNum>2){
+EdiTable.prototype.delRow = function(){
+    if(this._rowsNum>2){ // Because I don't want remove all rows.
         this._table.deleteRow(this._selectedRowIndex);
         this._isChange = true;
         this._rowsNum = this._table.rows.length;
-        this._btnSavePosition();
+        this.btnSavePosition();
     }
 };
-/*
- * _addCol
+/**
+ * addCol
+ * @param {string} side / Left or right.
+ * @returns {undefined}
  */
-EdiTable.prototype._addCol = function(side){
+EdiTable.prototype.addCol = function(side){
     var owner = this;    
     var index = null;
     var r = this._table.rows;
@@ -311,24 +304,30 @@ EdiTable.prototype._addCol = function(side){
             row.insertCell(index).innerHTML = "text";
         }
     });
-    this._btnSavePosition();
+    this.btnSavePosition();
 };
-/*
- * _delCol
+/**
+ * delCol
+ * @returns {undefined}
  */
-EdiTable.prototype._delCol = function(){
-    if(this._cellsNum>1){
+EdiTable.prototype.delCol = function(){
+    if(this._cellsNum>1){ // Because I don't want remove all columns.
         var index = this._selectedColIndex;
         var r = this._table.rows;
         Array.prototype.forEach.call(r,function(row){
             row.deleteCell(index);
         });
         this._cellsNum = this._table.rows[0].cells.length;
-        this._btnSavePosition();
+        this.btnSavePosition();
     }
 };
-
-EdiTable.prototype._isClassExists = function(item,cName){
+/**
+ * isClassExists / Check is class exist in item.
+ * @param {object} item / for example div element.
+ * @param {string} cName
+ * @returns {Boolean}
+ */
+EdiTable.prototype.isClassExists = function(item,cName){
     var classArr = item.className.split(" ");
     var find = false;
     classArr.forEach(function(cl){
@@ -338,20 +337,28 @@ EdiTable.prototype._isClassExists = function(item,cName){
     });  
     return find;
 };
-
-EdiTable.prototype._removeSortMarks = function(){
+/**
+ * removeSortMarks / Removes arrows graphics located on the right side of header text.
+ * @returns {undefined}
+ */
+EdiTable.prototype.removeSortMarks = function(){
     var sDivs = this._table.getElementsByClassName("sort-arrow");
     var owner = this;
     Array.prototype.forEach.call(sDivs,function(div){
-        owner._isClassExists(div,"sort-arrow-down") ? div.classList.remove("sort-arrow-down") : null;
-        owner._isClassExists(div,"sort-arrow-up") ? div.classList.remove("sort-arrow-up") : null;
+        owner.isClassExists(div,"sort-arrow-down") ? div.classList.remove("sort-arrow-down") : null;
+        owner.isClassExists(div,"sort-arrow-up") ? div.classList.remove("sort-arrow-up") : null;
     });  
 };
-
-EdiTable.prototype._setSortMark = function(colIndex, order){
+/**
+ * setSortMark / Adds arrows graphics located on the right side of header text.
+ * @param {number} colIndex / Column index.
+ * @param {number} order / Sort order.
+ * @returns {undefined}
+ */
+EdiTable.prototype.setSortMark = function(colIndex, order){
     var sDiv = this._table.rows[0].cells[colIndex].getElementsByTagName("div")[0];
     var sortClass = null;
-    this._removeSortMarks();
+    this.removeSortMarks();
     switch(order) {
         case 1:
             sortClass = "sort-arrow-up";
@@ -367,12 +374,17 @@ EdiTable.prototype._setSortMark = function(colIndex, order){
         sDiv.classList.add(sortClass);
     }
 };
-
-EdiTable.prototype._sortText = function(colIndex,order){
+/**
+ * sortText / Method used for sorting text in column.
+ * @param {number} colIndex / Column index.
+ * @param {number} order / Sort order.
+ * @returns {undefined}
+ */
+EdiTable.prototype.sortText = function(colIndex,order){
     var owner = this;
     var tempArr = Array.prototype.slice.call(this._table.rows);
     tempArr.shift();
-    this._setSortMark(colIndex, order);
+    this.setSortMark(colIndex, order);
     if(order !== 0){
         tempArr.sort(function(a,b){
             a = a.cells[colIndex].textContent;
@@ -389,12 +401,17 @@ EdiTable.prototype._sortText = function(colIndex,order){
         });
     }
 };
-
-EdiTable.prototype._sortNum = function(colIndex,order){
+/**
+ * sortNum / Method used for sorting numbers in column.
+ * @param {type} colIndex / Column index.
+ * @param {type} order / Sort order.
+ * @returns {undefined}
+ */
+EdiTable.prototype.sortNum = function(colIndex,order){
     var owner = this;
     var tempArr = Array.prototype.slice.call(this._table.rows);
     tempArr.shift();
-    this._setSortMark(colIndex, order);
+    this.setSortMark(colIndex, order);
         if(order !== 0){
         tempArr.sort(function(a,b){
             a = Number(a.cells[colIndex].textContent);
@@ -410,8 +427,11 @@ EdiTable.prototype._sortNum = function(colIndex,order){
         });
     }
 };
-
-EdiTable.prototype._addSortEditBtn = function(){
+/**
+ * addSortEditBtn / Adds the ability to set sorting for column in edit mode.
+ * @returns {undefined}
+ */
+EdiTable.prototype.addSortEditBtn = function(){
     var owner = this;
     var headers = this._table.rows[0].cells;
     this._sortEditBoxPozX = "0px";
@@ -428,7 +448,7 @@ EdiTable.prototype._addSortEditBtn = function(){
         if(col.getElementsByClassName("edit-sort").length === 0){
             div = document.createElement("div");
             div.classList.add("edit-sort");
-            if(owner._ediType === "context") div.classList.add("edit-sort-hide");
+            if(owner.ediType === "contextmenu") div.classList.add("edit-sort-hide");
             div.innerHTML = "<label for='isSorting'>Sorting<input type='checkbox' name='isSorting' value="+srtValue+" "+checked+"></label>";
             div.style.left = owner._sortEditBoxPozX;
             div.style.bottom = owner._sortEditBoxPozY;
@@ -436,24 +456,51 @@ EdiTable.prototype._addSortEditBtn = function(){
         }
     });
 };
-
-EdiTable.prototype._setOnOffSorting = function(){
+/**
+ * setOnOffSorting / Method used only in "contextmenu" option. Adds text on the 
+ *                   right side of word "Sorting" in context menu.
+ * @returns {undefined}
+ */
+EdiTable.prototype.setOnOffSorting = function(){
     var th = this._table.rows[0].cells[this._selectedColIndex];
     var contextMenu = document.getElementsByClassName("button-sorting")[0];
     var arrText = contextMenu.textContent.split(" ");
     var sortVal = th.querySelector('input[type=checkbox]').value;
     contextMenu.textContent = arrText[0]+" "+(sortVal === "true"?"OFF":"ON"); 
 };
-
-EdiTable.prototype._updateSortEditValue = function(){
+/**
+ * updateSortEditValue / Method used only in "contextmenu" option. Updates sort 
+ *                       values after clicked on the sort button in context menu.
+ * @returns {undefined}
+ */
+EdiTable.prototype.updateSortEditValue = function(){
     var th = this._table.rows[0].cells[this._selectedColIndex];
     var input = th.querySelector('input[type=checkbox]');
     var inputValue = input.value;
     input.value = (inputValue === "true" ? "false" : "true");
-    this._setOnOffSorting();
+    this.setOnOffSorting();
 };
-
-EdiTable.prototype._onClickBtnEdit = function(e){
+/**
+ * updateSortEditBtnValue / Method used only in "buttons" option. Updates sort 
+ *                          values after clicked in checkbox.
+ * @returns {undefined}
+ */
+EdiTable.prototype.updateSortEditBtnValue = function(){
+   this._table.addEventListener("change",function(e){
+       if(e.target.type === "checkbox"){
+           e.target.value = e.target.checked;
+       }
+   });
+};
+/**
+ * onClickBtnEdit / This method calls the action when the event occurs on:
+ *                  - table cells (th,td);
+ *                  - edit buttons (add,remove rows and columns) in "buttons" option;
+ *                  - edit buttons (add,remove rows and columns + rows sorting) in "contextmenu" option;
+ * @param {object} e / event
+ * @returns {undefined}
+ */
+EdiTable.prototype.onClickBtnEdit = function(e){
     var classArr = e.target.className.split(" ");
     var node = e.target.nodeName;
     var nodeClass = null;
@@ -467,56 +514,63 @@ EdiTable.prototype._onClickBtnEdit = function(e){
         }
     });
     if(node === "TD" || node === "TH"){
-        this._currentTd !== null ? this._cancelInput():null;
-        this._setInput(e.target);
+        this.cancelInput();
+        this.setInput(e.target);
         if(node === "TH"){    
         }
     }else if(nodeClass === "btn-arrows" || nodeClass === "btn-context"){
         param = this._buttons[btn].param;
         this._buttons[btn].method.call(this,param);
-        this._btnRowPosition();
-        this._btnColPosition(); 
+        this.btnRowPosition();
+        this.btnColPosition(); 
     }else if(node === "INPUT"){
     }else {
-        this._currentTd !== null ? this._cancelInput():null;
+        this.cancelInput();
     }
 };
-    
-EdiTable.prototype._onMouseOverBtnEdit = function(e){
+/**
+ * onMouseOverBtnEdit / This method is responsible for showing a group of buttons 
+ *                      (add left, add right, delete) when the user hovers over 
+ *                      the table row or column header.
+ * @param {object} e / event
+ * @returns {undefined}
+ */    
+EdiTable.prototype.onMouseOverBtnEdit = function(e){
     var node = e.target.nodeName; 
-
     if(node === "TD" || e.target.id === "btns-row-edit"){
         if(node === "TD"){
             this._selectedRowIndex = e.target.parentNode.rowIndex;
-            this._btnRowPosition();
+            this.btnRowPosition();
         }
-        this._colBtns.style.display = "none";
-        this._rowBtns.style.display = "block";
+        this.displayBtnRowCol("block","none");
     }else if(node === "TH" || e.target.id === "btns-col-edit"){
         if(node === "TH"){
             this._selectedColIndex = e.target.cellIndex;
             this._selectedCol = e.target;
-            this._btnColPosition();
+            this.btnColPosition();
         }
-        this._rowBtns.style.display = "none";
-        this._colBtns.style.display = "block";
+        this.displayBtnRowCol("none","block");
     }
 };
-    
-EdiTable.prototype._onMouseOutBtnEdit = function(e){
+/**
+ * onMouseOutBtnEdit / This method is responsible for hiding a group of buttons.
+ * @param {object} e / event
+ * @returns {undefined}
+ */    
+EdiTable.prototype.onMouseOutBtnEdit = function(e){
     var node = e.target.nodeName;
     if(node === "TD"){
-        this._rowBtns.style.display = "none";
+        this.displayBtnRowCol("none",null);
     }else if(node === "TH"){
-        this._colBtns.style.display = "none";
+        this.displayBtnRowCol(null,"none");
     }
 };
-
-/*
- * 
+/**
+ * onSortBtn / This method is called after clicked on sort button.
+ * @param {object} e / event
  * @returns {undefined}
  */
-EdiTable.prototype._onSortBtn = function(e){
+EdiTable.prototype.onSortBtn = function(e){
     var classArr = e.target.className.split(" ");
     var node = e.target.nodeName;
     var sortSteps = [1,-1,0];
@@ -524,7 +578,6 @@ EdiTable.prototype._onSortBtn = function(e){
     var colIndex = null;
     var th = null;
     var order = null;
-    
     if(node === "A"){
        th = e.target.parentNode; 
        colIndex = th.cellIndex;
@@ -534,36 +587,46 @@ EdiTable.prototype._onSortBtn = function(e){
             }
         }); 
         if(this._sortMemory === th.cellIndex){
+            if(typeof(th.counter)==="undefined") th.counter = 0;
             th.counter = (th.counter >= 2 ? 0 : th.counter + 1);
         }else {
             th.counter = 0;
         }
         this._sortMemory = th.cellIndex;
+        
         order = sortSteps[th.counter];
     }
     if(sort === "sort-text"){
-        this._sortText(colIndex,order);
+        this.sortText(colIndex,order);
     }else if(sort === "sort-number"){
-        this._sortNum(colIndex,order);
+        this.sortNum(colIndex,order);
     }
 };
-/*
- * _addEventsToButtons
+/**
+ * addEventsToBtnsEdit
+ * @returns {undefined}
  */
-EdiTable.prototype._addEventsToButtons = function(){
-    var body = document.querySelector("body");
-    
-    body.addEventListener("click", this._onClickBtnEdit, false);
-    
-    if(this._ediType === "buttons"){
-        body.addEventListener("mouseover", this._onMouseOverBtnEdit, false); 
-        this._table.addEventListener("mouseout", this._onMouseOutBtnEdit, false);
+EdiTable.prototype.addEventsToBtnsEdit = function(){
+    this._body.addEventListener("click", this.onClickBtnEdit, false);
+    if(this.ediType === "buttons"){
+        this._body.addEventListener("mouseover", this.onMouseOverBtnEdit, false); 
+        this._table.addEventListener("mouseout", this.onMouseOutBtnEdit, false);
     }
 };
-/*
- * _showMenu
+/**
+ * removeEventsOfBtnsEdit
+ * @returns {undefined}
  */
-EdiTable.prototype._showContexmenu = function(){ 
+EdiTable.prototype.removeEventsOfBtnsEdit = function(){
+    this._body.removeEventListener("click", this.onClickBtnEdit);
+    this._body.removeEventListener("mouseover", this.onMouseOverBtnEdit);
+    this._table.removeEventListener("mouseout", this.onMouseOutBtnEdit);
+};
+/**
+ * showContexmenu
+ * @returns {undefined}
+ */
+EdiTable.prototype.showContexmenu = function(){ 
     if(this._t){
         this._t = 0;
         this._contextmenu.style.display = "block";
@@ -572,17 +635,16 @@ EdiTable.prototype._showContexmenu = function(){
         this._contextmenu.style.display = "none";
     }
 };
-/*
- * _drawContextmenu
+/**
+ * drawContextmenu / This method creates context menu in html.
+ * @returns {undefined}
  */
-EdiTable.prototype._drawContextmenu = function(){
+EdiTable.prototype.drawContextmenu = function(){
     var div = document.createElement("div");
     var ul = document.createElement("ul");
     var btns = this._buttons;
-    
     div.classList.add("context");
     ul.classList.add("context-list");
-    
     for(var prop in btns){
         var li = document.createElement("li");
         var b = document.createElement("button");
@@ -597,28 +659,28 @@ EdiTable.prototype._drawContextmenu = function(){
     this._table.parentNode.insertBefore(div,null);
     this._contextmenu = document.querySelector(".context");    
 };
-/*
- * 
+/**
+ * disabledBtn / Disabled or enabled buttons in context menu.
+ * @param {array} btnArr
+ * @param {boolean} isDisabled
  * @returns {undefined}
  */
-EdiTable.prototype._disabledBtn = function(btnArr,isDisabled){
+EdiTable.prototype.disabledBtn = function(btnArr,isDisabled){
     var class1 = (isDisabled === true ? "btn-context" : "btn-disabled");
     var class2 = (isDisabled === true ? "btn-disabled" : "btn-context");
-   // if(typeof btnArr === "Array"){
-        btnArr.forEach(function(btn,i){
-            btn.classList.remove(class1);
-            btn.classList.add(class2);
-            btn.disabled = isDisabled;
-        });
-   // }
+    btnArr.forEach(function(btn){
+        btn.classList.remove(class1);
+        btn.classList.add(class2);
+        btn.disabled = isDisabled;
+    });
 };
-/*
- * _addEventContextmenu
+/**
+ * addEventContextmenu / Adding event to context menu. 
+ * @returns {undefined}
  */
-EdiTable.prototype._addEventContextmenu = function(){  
+EdiTable.prototype.addEventContextmenu = function(){  
     this._t = 1;
     var owner = this;
-    
     this._table.addEventListener("contextmenu",function(e){
         var node = e.target.nodeName;
         var btnUp = document.querySelector(".button-add-row-up");
@@ -628,67 +690,70 @@ EdiTable.prototype._addEventContextmenu = function(){
         var sortBtn = [sort];
         if(node === "TH" || node === "TD"){
             e.preventDefault();
-            owner._setContextPosition(e);
+            owner.setContextPosition(e);
             owner._selectedRowIndex = e.target.parentNode.rowIndex;
             owner._selectedColIndex = e.target.cellIndex;
             if(node === "TH"){
-                owner._disabledBtn(btns,true);
-                owner._disabledBtn(sortBtn,false);
+                owner.disabledBtn(btns,true);
+                owner.disabledBtn(sortBtn,false);
             }else if(node === "TD"){
-                owner._disabledBtn(btns,false);
-                owner._disabledBtn(sortBtn,true);
+                owner.disabledBtn(btns,false);
+                owner.disabledBtn(sortBtn,true);
             }
-            owner._setOnOffSorting();
-            owner._showContexmenu();
+            owner.setOnOffSorting();
+            owner.showContexmenu();
         }
     },false);
     
     window.addEventListener("click",function(){ 
-        owner._t === 0 ? owner._showContexmenu():null;
+        owner._t === 0 ? owner.showContexmenu():null;
     },false);
     
     window.onresize = function(){
         owner._t = 1;
         owner._contextmenu.style.display = "none";
     };  
-    this._addEventsToButtons();
+    this.addEventsToBtnsEdit();
 };
-/* 
- * _setContextPosition
+/**
+ * setContextPosition / Sets context menu position in the place where user 
+ *                      click right mouse button.
+ * @param {object} eventObj
+ * @returns {undefined}
  */
-EdiTable.prototype._setContextPosition = function(eventObj){
+EdiTable.prototype.setContextPosition = function(eventObj){
     this._contextmenu.style.position = "absolute";
     this._contextmenu.style.left = eventObj.clientX+"px";
     this._contextmenu.style.top = eventObj.clientY+"px";
 };
-/*
- * _addContextmenu
+/**
+ * addContextmenu / Creates context menu using "this._buttons" configuration.
+ * @returns {undefined}
  */
-EdiTable.prototype._addContextmenu = function(){ 
+EdiTable.prototype.addContextmenu = function(){ 
     this._buttons = {
-        "button-sorting": {label: "Sorting OFF", method: this._updateSortEditValue},
-        "button-add-row-up": {label: "Add row above", method: this._addRow, param:"U"},
-        "button-add-row-down": {label: "Add row below", method: this._addRow, param:"D"},
-        "button-del-row": {label: "Delete row", method: this._delRow, param:"DEL"},
-        "button-add-col-right": {label: "Add column to right", method: this._addCol, param:"R"},
-        "button-add-col-left": {label: "Add column to left", method: this._addCol, param:"L"},
-        "button-del-col": {label: "Delete column", method: this._delCol, param:"DEL"}
+        "button-sorting": {label: "Sorting OFF", method: this.updateSortEditValue},
+        "button-add-row-up": {label: "Add row above", method: this.addRow, param:"A"},
+        "button-add-row-down": {label: "Add row below", method: this.addRow, param:"U"},
+        "button-del-row": {label: "Delete row", method: this.delRow, param:"DEL"},
+        "button-add-col-right": {label: "Add column to right", method: this.addCol, param:"R"},
+        "button-add-col-left": {label: "Add column to left", method: this.addCol, param:"L"},
+        "button-del-col": {label: "Delete column", method: this.delCol, param:"DEL"}
     };
-    this._drawContextmenu();
-    this._addEventContextmenu(); 
+    this.drawContextmenu();
+    this.addEventContextmenu(); 
 };
-/*
- * 
- * ----------------------------Buttons------------------------
+/**
+ * drawButtons / This method creates groups of buttons in html for "buttons" option. 
+ * @returns {undefined}
  */
-EdiTable.prototype._drawButtons = function(){
-    if(this._rowBtns && this._colBtns) return;
+EdiTable.prototype.drawButtons = function(){
+    if(this.rowBtns && this.colBtns) return;
     var btns = this._buttons;
     var btnsRowBox = document.createElement("div");
     var btnsColBox = document.createElement("div");
     btnsRowBox.setAttribute("id","btns-row-edit");
     btnsColBox.setAttribute("id","btns-col-edit");
-
     for(var prop in btns){
         var circle = document.createElement("div");
         var button = document.createElement("button");
@@ -703,67 +768,77 @@ EdiTable.prototype._drawButtons = function(){
             btnsColBox.appendChild(circle);
         }
     };
-
     this._table.parentNode.insertBefore(btnsRowBox,null);
     this._table.parentNode.insertBefore(btnsColBox,null);
-    this._rowBtns = document.querySelector("#btns-row-edit");
-    this._colBtns = document.querySelector("#btns-col-edit");
+    this.rowBtns = document.querySelector("#btns-row-edit");
+    this.colBtns = document.querySelector("#btns-col-edit");
 };
-/*
- * 
+/**
+ * setRowIndex / This method works only in "buttons" option. Indicade selected 
+ *               row excluding row with headers. It's used for finding correct 
+ *               position for groups of buttons.
  * @returns {undefined}
  */
-EdiTable.prototype._setRowIndex = function(){
+EdiTable.prototype.setRowIndex = function(){
     var row = this._table.rows[Number(this._selectedRowIndex)];
     if(typeof row === "undefined"){
         this._selectedRowIndex = (this._selectedRowIndex > 1 ? this._selectedRowIndex-1:1);    
     }
 };
-/*
- * 
+/**
+ * setColIndex / This method works only in "buttons" option. Indicade selected 
+ *               column (only when user placet cursor over the table header). 
+ *               It's used for finding correct position for groups of buttons.
  * @returns {undefined}
  */
-EdiTable.prototype._setColIndex = function(){
+EdiTable.prototype.setColIndex = function(){
     var col = this._table.rows[0].cells[this._selectedColIndex];
     if(typeof col === "undefined"){
         this._selectedColIndex = (this._selectedColIndex >= 1 ? this._selectedColIndex-1:0); 
     }
 };
-/*
- * _btnRowPosition
+/**
+ * btnRowPosition / This method works only in "buttons" option. 
+ *                  Calculate buttons group position for row. 
+ * @returns {undefined}
  */
-EdiTable.prototype._btnRowPosition = function(){
-    if(this._ediType === "buttons"){
+EdiTable.prototype.btnRowPosition = function(){
+    if(this.ediType === "buttons"){
         var currentRow, offsetTop;
         var leftMarginStr = window.getComputedStyle(this._table).marginLeft;
-        var leftMargin = Number(leftMarginStr.slice(0,leftMarginStr.length-2));
-        this._setRowIndex();
+        //var leftMargin = Number(leftMarginStr.slice(0,leftMarginStr.length-2));
+        this.setRowIndex();
         currentRow = this._table.rows[Number(this._selectedRowIndex)];
         offsetTop = this._table.offsetTop + currentRow.offsetTop;
-        this._rowBtns.style.top = offsetTop+"px";
-        this._rowBtns.style.left = (this._table.rows[0].clientWidth)+"px";
+        this.rowBtns.style.top = offsetTop+"px";
+        this.rowBtns.style.left = (this._table.rows[0].clientWidth)+"px";
     }
 };
-/*
- * _btnColPosition
+/**
+ * btnColPosition / This method works only in "buttons" option. 
+ *                  Calculate buttons group position for column. 
+ * @returns {undefined}
  */
-EdiTable.prototype._btnColPosition = function(){
-    if(this._ediType === "buttons"){
+EdiTable.prototype.btnColPosition = function(){
+    if(this.ediType === "buttons"){
         var currentCol, xPozCol, yPozCol;
-        this._setColIndex();
+        this.setColIndex();
         currentCol = this._table.rows[0].cells[this._selectedColIndex];
         var paddingLeftText = window.getComputedStyle(currentCol, null).getPropertyValue('padding-left');
         var paddingLeft = Number(paddingLeftText.slice(0,-2));
         xPozCol = (currentCol.offsetLeft-paddingLeft)+(currentCol.clientWidth/2);
         yPozCol = this._table.offsetTop - 18;
-        this._colBtns.style.top = yPozCol+"px";
-        this._colBtns.style.left = xPozCol+"px";
+        this.colBtns.style.top = yPozCol+"px";
+        this.colBtns.style.left = xPozCol+"px";
     }
 };
-/*
- * _setInput
+/**
+ * setInput / Turns the table cell into an input field. I saves information about 
+ *            selected table cell in "this._currentTd" to reproduce it later.
+ * @param {object} td / selected table cell
+ * @returns {undefined}
  */
-EdiTable.prototype._setInput = function(td){
+EdiTable.prototype.setInput = function(td){
     var input = document.createElement("input");
     var sDiv = td.getElementsByClassName("edit-sort")[0];
     var inputData = null;
@@ -794,10 +869,12 @@ EdiTable.prototype._setInput = function(td){
     td.appendChild(input);
     input.focus();
 };
-/*
- * _cancelInput
+/**
+ * cancelInput / Turns the input field back into table cell.
+ * @returns {undefined}
  */
-EdiTable.prototype._cancelInput = function(){
+EdiTable.prototype.cancelInput = function(){
+    if(this._currentTd === null) return;
     var input = this._currentTd.item;
     var text = this._currentTd.item.value;
     var parent = this._currentTd.item.parentNode;
@@ -817,27 +894,28 @@ EdiTable.prototype._cancelInput = function(){
     parent.removeChild(input);
     this._currentTd = null;
 };
-/*
- * _addBtns
- */
-EdiTable.prototype._addBtns = function(){
-    this._buttons = {
-        "button-add-row-up": {class: ["circle-up"], label: "",method: this._addRow, param:"U"},
-        "button-add-row-down": {class: ["circle-down"], label: "",method: this._addRow, param:"D"},
-        "button-del-row": {class: ["circle-delete-row"], label: "",method: this._delRow, param:"DEL"},
-        "button-add-col-left": {class: ["circle-left"], label: "",method: this._addCol, param:"L"},
-        "button-del-col": {class: ["circle-delete"], label: "",method: this._delCol, param:"DEL"},
-        "button-add-col-right": {class: ["circle-right"], label: "",method: this._addCol, param:"R"}
-    };
-    this._drawButtons();
-    //this._addEventToTRAndTH();
-    this._addEventsToButtons();
-};
-/*
- * 
+/**
+ * addBtns / Creates groups of buttons using "this._buttons" configuration.
  * @returns {undefined}
  */
-EdiTable.prototype._setTableProperties = function(){
+EdiTable.prototype.addBtns = function(){
+    this._buttons = {
+        "button-add-row-up": {class: ["circle-up"], label: "",method: this.addRow, param:"A"},
+        "button-add-row-down": {class: ["circle-down"], label: "",method: this.addRow, param:"U"},
+        "button-del-row": {class: ["circle-delete-row"], label: "",method: this.delRow, param:"DEL"},
+        "button-add-col-left": {class: ["circle-left"], label: "",method: this.addCol, param:"L"},
+        "button-del-col": {class: ["circle-delete"], label: "",method: this.delCol, param:"DEL"},
+        "button-add-col-right": {class: ["circle-right"], label: "",method: this.addCol, param:"R"}
+    };
+    this.drawButtons();
+    this.addEventsToBtnsEdit();
+    this.updateSortEditBtnValue();
+};
+/**
+ * setTableProperties
+ * @returns {undefined}
+ */
+EdiTable.prototype.setTableProperties = function(){
     var headers = this._table.getElementsByTagName("th");
     this._headers = Array.prototype.slice.call(headers);
     this._rowsNum = this._table.rows.length;
@@ -846,16 +924,24 @@ EdiTable.prototype._setTableProperties = function(){
     this._rowsArr = Array.prototype.slice.call(this._rows);
     this._rowsArr.shift();
 };
-/*
- * 
- * @returns {undefined}
+/**
+ * getDataFromTable / Method returns an array (tdArr) which represents table data. 
+ *                    The tdArr contains group of arrays. Those arrays represents 
+ *                    each row. 
+ *                    The structure of the first table - In first place we have 
+ *                    the table header name then the information whether the 
+ *                    given column has a sort functionality.
+ *                    The structure of the rest arrays - In first place we have 
+ *                    the table cell content then the information about the type 
+ *                    of table cell content (string or number).             
+ * @returns {Array|EdiTable.prototype.getDataFromTable.tdArr}
  */
-EdiTable.prototype._getDataFromTable = function(){
+EdiTable.prototype.getDataFromTable = function(){
     var tdArr = [];
     var td = [];
     var type = null;
     var sortVal = false;
-    this._setTableProperties();
+    this.setTableProperties();
     Array.prototype.forEach.call(this._table.rows, function(row){
         Array.prototype.forEach.call(row.cells, function(col){
             if(col.nodeName === "TH"){
@@ -877,11 +963,15 @@ EdiTable.prototype._getDataFromTable = function(){
     });
     return tdArr;  
 };
-/*
- * 
- * @returns {undefined}
+/**
+ * createColObj / Method creates object which will represents each column.
+ * @param {string} th
+ * @param {object} td
+ * @param {string} type
+ * @param {boolean} sort
+ * @returns {EdiTable.prototype.createColObj.obj}
  */
-EdiTable.prototype._createColObj = function(th,td,type,sort){
+EdiTable.prototype.createColObj = function(th,td,type,sort){
     var obj = {"th":null,"td":null,"type":null,"sort":false};
     obj.th = th;
     obj.td = td;
@@ -889,11 +979,14 @@ EdiTable.prototype._createColObj = function(th,td,type,sort){
     obj.sort = sort;
     return obj;
 };
-/*
- * 
- * @returns {undefined}
+/**
+ * createColArr / Method create array which will represents each column.
+ *                Odd arrays contain the contents of a given column.
+ *                Even arrays contain sorting information.
+ * @param {array} arr
+ * @returns {Array|EdiTable.prototype.createColArr.colArray}
  */
-EdiTable.prototype._createColArr = function(arr){
+EdiTable.prototype.createColArr = function(arr){
     var colArray = [];
     arr[0].forEach(function(){
             colArray.push([]);
@@ -901,13 +994,13 @@ EdiTable.prototype._createColArr = function(arr){
     return colArray;
 };
 
-/*
- * 
- * @param {type} arr
- * @param {type} types
+/**
+ * checkTypeInArray / Method check what type of data we have in column.
+ * @param {array} arr / Even array returned from createColArr method.
+ * @param {array} types / Types to check - ["string","number"]
  * @returns {Boolean|type}
  */
-EdiTable.prototype._checkTypeInArray = function(arr,types){
+EdiTable.prototype.checkTypeInArray = function(arr,types){
     var result;
     for(var i = 0; i<types.length;i++){
         result = types[i];
@@ -918,11 +1011,11 @@ EdiTable.prototype._checkTypeInArray = function(arr,types){
     }
     return result;
 };
-/*
+/**
  * 
  * @returns {undefined}
  */
-EdiTable.prototype._saveToObj = function(colArr){
+EdiTable.prototype.saveToObj = function(colArr){
     var owner = this;
     var th = null;
     var td = [];
@@ -934,12 +1027,11 @@ EdiTable.prototype._saveToObj = function(colArr){
             th = col[0];
             td = col.slice(1,col.length);
         }else {
-            type = owner._checkTypeInArray(col.slice(1,col.length),["string","number"]);
+            type = owner.checkTypeInArray(col.slice(1,col.length),["string","number"]);
             sort = (col[0] === "true"); 
         }
         if(i%2 === 1){
-            //console.log(i%2+" - th:"+th+", td:"+td+", type:"+type+", sort:"+sort);
-            obj.tableData.push(owner._createColObj(th,td,type,sort));
+            obj.tableData.push(owner.createColObj(th,td,type,sort));
             th = null;
             td = [];
             type = null;
@@ -948,37 +1040,41 @@ EdiTable.prototype._saveToObj = function(colArr){
     });
     return obj;
 };
-/*
- * 
- * getSavedData
+/**
+ * savedData / The method used to return the final version of the saved data.
+ * @returns {String}
  */
 EdiTable.prototype.savedData = function(){
-    this._saveTable();
+    this.saveTable();
     return this._savedData;
 };
 /**
- * _saveTable - saves row to column
+ * saveTable / Saves row to column and convert to JSON format.
+ * @returns {undefined}
  */
-EdiTable.prototype._saveTable = function(){
-    var tableData = this._getDataFromTable();
+EdiTable.prototype.saveTable = function(){
+    var tableData = this.getDataFromTable();
     var arrLength = tableData.length;
     var colNum = tableData[0].length;
     var data = null;
     var dataObj = null;
-    var colArr = this._createColArr(tableData);
+    var colArr = this.createColArr(tableData);
     for (var i = 0; i < arrLength; i++) {
         for (var j = 0; j < colNum; j++) {
             data = (typeof(tableData[i][j]) !== "undefined"?tableData[i][j]:"");
             colArr[j].push(data);
         }
     } 
-    dataObj = this._saveToObj(colArr); 
+    dataObj = this.saveToObj(colArr); 
     this._data = dataObj;
     this._savedData = JSON.stringify(dataObj,undefined,15);
-    this._setTableProperties();
+    this.setTableProperties();
 };
-/*
- * Public method onSaveBtn
+/**
+ * onSaveBtn / Method that user can use to run callback function after pressing 
+ *             "save" button.
+ * @param {function} callback
+ * @returns {EdiTable.prototype.onSaveBtn.obj}
  */
 EdiTable.prototype.onSaveBtn = function(callback){
     if(typeof callback === "function"){

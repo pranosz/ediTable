@@ -3,18 +3,14 @@ var data = {tableData:[
         {th:"check",td:["true","true","false","true"],type:"string",sort:true},
         {th:"Numbers",td:[1,2,12,4],type:"number",sort:true},
         {th:"Name",td:["Piotr","Robert","Kamil","Marcin"],type:"string",sort:true},
-        {th:"Surname",td:["Kowalski","Nowak","Noname","Długosz"],type:"string",sort:true},
+        {th:"Surname",td:["Kowalski","Nowak","Noname","Dlugosz"],type:"string",sort:true},
         {th:"Position",td:["Programmer","Accountant","Police officer","Athlete"],type:"string"},
         {th:"Telephone",td:["699-399-234","324-567-901","",""],type:"string"},
 ]};
-var tableSet = {
-    editType: "context", // context, buttons
-    sorting: false // false
-};
 
-var ediTable = new EdiTable(tableSet, data);  
+// contextmenu, buttons
+var ediTable = new EdiTable(data,"buttons");  
 var set = true;
-
 
 function callback(){
     var savedData = ediTable.savedData();
@@ -42,7 +38,7 @@ btnTableEdit.parentNode.insertBefore(btnTableEdit,table);
 btnTableEdit.addEventListener("click",function(e){
     var node = e.target.classList.item(0);
         if(node === "btn-edit"){
-            console.log("btn-edit "+set);
+            //console.log("btn-edit "+set);
             ediTable.editMode(set);
             set = (set === true ? false : true);
         }   
