@@ -1,21 +1,21 @@
 /**
  * EdiTable
  * 
- * EdiTable is a component which adds to the standard html table sorting 
- * functionality and enable the edit mode. Edit mode allow you to add or delete 
- * rows or columns. You can edit content in each cells in the table and also 
- * you can set which column should have (or not) a sorting functionality. 
- * After finishing editing, you should press "Save" button, if you want to save changes. 
- * After that you can get table data in JSON format using "savedData" method.   
- * You can choose one of the two way of editing mode ("buttons" or "context"). 
- * If you choice "buttons" your editing mode get buttons for each rows and 
- * columns whe you rollover rows or columns (headers). But if you choose 
- * "contentmenu"  your editing mode will works when you click right button 
- * of the mouse on rows or columns (headers).
+ * EdiTable is a component which adds to the standard html table sorting functionality 
+ * and enables the edit mode. Edit mode allows you to add or delete rows or columns. 
+ * You can edit content in each cell in the table, you can also set which column 
+ * should have (or not) a sorting functionality. After finishing editing, you should 
+ * press "Save" button, if you want to save changes. After that you can get table 
+ * data in JSON format using "savedData" method.  You can choose one of two ways 
+ * of working in edit mode ("buttons" or "context"). If you choose "buttons" your 
+ * edit mode gets buttons for each row and column when you roll over headers. 
+ * But if you choose "context" your edit mode will work when you right click on rows 
+ * or columns (headers).
  * 
  * @param {string} editType / buttons or contextmenu
  * @param {json} data / data table 
  * @returns {EdiTable}
+ * @author Piotr Ranosz
  */
 "use strict";
 function EdiTable(data,editType){
@@ -48,8 +48,7 @@ function EdiTable(data,editType){
     this.launchTable();
 };
 /*
- * launchTable / Method contains group of methods that must be launched to 
- *               run the table.
+ * launchTable / Method contains group of methods that must be launched to run the table.
  * @returns {undefined}
  */
 EdiTable.prototype.launchTable = function(){
@@ -134,7 +133,7 @@ EdiTable.prototype.setEditType = function(){
     }
 };
 /**
- * displayBtnRowCol / Method show or hide buttons for adding or deleting rows and columns. 
+ * displayBtnRowCol / Method shows or hides buttons for adding or deleting rows and columns.  
  * @param {string} row / "none" or "block"
  * @param {string} col / "none" or "block"
  * @returns {undefined}
@@ -163,7 +162,7 @@ EdiTable.prototype.hideSaveBtn = function(){
   this.saveBtn.style.display = "none"; 
 };
 /**
- * createBtnWrapper / Method first create container (if doesn't exist) 
+ * createBtnWrapper / Method first creates container (if doesn't exist)
  *                    for a button and then creates button wrapper.
  * @param {string} containerName
  * @param {string} wrapperName
@@ -201,7 +200,7 @@ EdiTable.prototype.createButton = function(text,className,btnWrapper){
 };
 /**
  * btnSavePosition / Taking into account the width and hight of the table, 
- *                   method calculate position of the "save" button.
+ *                   method calculates position of the "save" button.
  * @returns {undefined}
  */
 EdiTable.prototype.btnSavePosition = function(){
@@ -209,7 +208,7 @@ EdiTable.prototype.btnSavePosition = function(){
     this.saveBtn.style.top = (this._table.clientHeight + this._table.offsetTop)+"px";
 };
 /**
- * removeTable / Remove table (if exist) and "save" button.
+ * removeTable / Remove table (if exists) and "save" button.
  * @returns {undefined}
  */
 EdiTable.prototype.removeTable = function(){ 
@@ -283,7 +282,7 @@ EdiTable.prototype.addRow = function(tier){
  * @returns {undefined}
  */
 EdiTable.prototype.delRow = function(){
-    if(this._rowsNum>2){ // Because I don't want remove all rows.
+    if(this._rowsNum>2){ // Because I don't want to remove all rows.
         this._table.deleteRow(this._selectedRowIndex);
         this._isChange = true;
         this._rowsNum = this._table.rows.length;
@@ -346,7 +345,7 @@ EdiTable.prototype.isClassExists = function(item,cName){
     return find;
 };
 /**
- * removeSortMarks / Removes arrows graphics located on the right side of header text.
+ * removeSortMarks / Removes arrow graphics located on the right side of header text.
  * @returns {undefined}
  */
 EdiTable.prototype.removeSortMarks = function(){
@@ -383,7 +382,7 @@ EdiTable.prototype.setSortMark = function(colIndex, order){
     }
 };
 /**
- * sortText / Method used for sorting text in column.
+ * sortText / Method used to sort text in column.
  * @param {number} colIndex / Column index.
  * @param {number} order / Sort order.
  * @returns {undefined}
@@ -410,7 +409,7 @@ EdiTable.prototype.sortText = function(colIndex,order){
     }
 };
 /**
- * sortNum / Method used for sorting numbers in column.
+ * sortNum / Method used to sort numbers in column.
  * @param {type} colIndex / Column index.
  * @param {type} order / Sort order.
  * @returns {undefined}
@@ -478,7 +477,7 @@ EdiTable.prototype.setOnOffSorting = function(){
 };
 /**
  * updateSortEditValue / Method used only in "contextmenu" option. Updates sort 
- *                       values after clicked on the sort button in context menu.
+ *                       values after clicking on the sort button in context menu.
  * @returns {undefined}
  */
 EdiTable.prototype.updateSortEditValue = function(){
@@ -490,7 +489,7 @@ EdiTable.prototype.updateSortEditValue = function(){
 };
 /**
  * updateSortEditBtnValue / Method used only in "buttons" option. Updates sort 
- *                          values after clicked in checkbox.
+ *                          values after clicking in checkbox.
  * @returns {undefined}
  */
 EdiTable.prototype.updateSortEditBtnValue = function(){
@@ -724,8 +723,7 @@ EdiTable.prototype.addEventContextmenu = function(){
     this.addEventsToBtnsEdit();
 };
 /**
- * setContextPosition / Sets context menu position in the place where user 
- *                      click right mouse button.
+ * setContextPosition / Sets context menu position in the place where user right click.
  * @param {object} eventObj
  * @returns {undefined}
  */
@@ -782,8 +780,8 @@ EdiTable.prototype.drawButtons = function(){
     this.colBtns = document.querySelector("#btns-col-edit");
 };
 /**
- * setRowIndex / This method works only in "buttons" option. Indicade selected 
- *               row excluding row with headers. It's used for finding correct 
+ * setRowIndex / This method works only in "buttons" option. Indicades selected 
+ *               row excluding row with headers. It's used to find correct 
  *               position for groups of buttons.
  * @returns {undefined}
  */
@@ -794,9 +792,9 @@ EdiTable.prototype.setRowIndex = function(){
     }
 };
 /**
- * setColIndex / This method works only in "buttons" option. Indicade selected 
- *               column (only when user placet cursor over the table header). 
- *               It's used for finding correct position for groups of buttons.
+ * setColIndex / This method works only in "buttons" option. Indicades selected  
+ *               column (only when user places cursor over the table header). 
+ *               It's used to find correct position for groups of buttons.
  * @returns {undefined}
  */
 EdiTable.prototype.setColIndex = function(){
@@ -807,7 +805,7 @@ EdiTable.prototype.setColIndex = function(){
 };
 /**
  * btnRowPosition / This method works only in "buttons" option. 
- *                  Calculate buttons group position for row. 
+ *                  Calculates button's group position for row. 
  * @returns {undefined}
  */
 EdiTable.prototype.btnRowPosition = function(){
@@ -824,7 +822,7 @@ EdiTable.prototype.btnRowPosition = function(){
 };
 /**
  * btnColPosition / This method works only in "buttons" option. 
- *                  Calculate buttons group position for column. 
+ *                  Calculates button's group position for column.  
  * @returns {undefined}
  */
 EdiTable.prototype.btnColPosition = function(){
@@ -841,7 +839,7 @@ EdiTable.prototype.btnColPosition = function(){
     }
 };
 /**
- * setInput / Turns the table cell into an input field. I saves information about 
+ * setInput / Turns the table cell into an input field. I save information about 
  *            selected table cell in "this._currentTd" to reproduce it later.
  * @param {object} td / selected table cell.
  * @returns {undefined}
@@ -934,14 +932,13 @@ EdiTable.prototype.setTableProperties = function(){
 };
 /**
  * getDataFromTable / Method returns an array (tdArr) which represents table data. 
- *                    The tdArr contains group of arrays. Those arrays represents 
- *                    each row. 
- *                    The structure of the first table - In first place we have 
- *                    the table header name then the information whether the 
- *                    given column has a sort functionality.
- *                    The structure of the rest arrays - In first place we have 
- *                    the table cell content then the information about the type 
- *                    of table cell content (string or number).             
+ *                    The tdArr contains group of arrays. Those arrays represent 
+ *                    each row. The structure of the first table - In first place 
+ *                    we have the table header name then the information whether 
+ *                    the given column has a sort functionality. The structure 
+ *                    of the rest arrays - In first place we have the table cell 
+ *                    content then the information about the type of table cell 
+ *                    content (string or number).             
  * @returns {Array|EdiTable.prototype.getDataFromTable.tdArr}
  */
 EdiTable.prototype.getDataFromTable = function(){
@@ -972,7 +969,7 @@ EdiTable.prototype.getDataFromTable = function(){
     return tdArr;  
 };
 /**
- * createColObj / Method creates object which will represents each column.
+ * createColObj / Method creates object which will represent each column.
  * @param {string} th
  * @param {object} td
  * @param {string} type
@@ -988,8 +985,8 @@ EdiTable.prototype.createColObj = function(th,td,type,sort){
     return obj;
 };
 /**
- * createColArr / Method create array which will represents each column.
- *                Odd arrays contain the contents of a given column.
+ * createColArr / Method creates array which will represent each column. 
+ *                Odd arrays contain the contents of a given column. 
  *                Even arrays contain sorting information.
  * @param {array} arr
  * @returns {Array|EdiTable.prototype.createColArr.colArray}
@@ -1003,7 +1000,7 @@ EdiTable.prototype.createColArr = function(arr){
 };
 
 /**
- * checkTypeInArray / Method check what type of data we have in column.
+ * checkTypeInArray / Method checks what type of data we have in column.
  * @param {array} arr / Even array returned from createColArr method.
  * @param {array} types / Types to check - ["string","number"]
  * @returns {Boolean|type}
