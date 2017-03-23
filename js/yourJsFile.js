@@ -1,17 +1,20 @@
- 
+ // Table in JSON format
 var data = {tableData:[
-        {th:"check",td:["true","true","false","true"],type:"string",sort:true},
-        {th:"Numbers",td:[1,2,12,4],type:"number",sort:true},
-        {th:"Name",td:["Piotr","Robert","Kamil","Marcin"],type:"string",sort:true},
-        {th:"Surname",td:["Kowalski","Nowak","Noname","Dlugosz"],type:"string",sort:true},
-        {th:"Position",td:["Programmer","Accountant","Police officer","Athlete"],type:"string"},
-        {th:"Telephone",td:["699-399-234","324-567-901","",""],type:"string"},
+        {th:"Text header 1",td:["cell1","cell2","cell3","cell4"],type:"string",sort:true},
+        {th:"Text header 2",td:[1,2,12,4],type:"number",sort:true},
+        {th:"Text header 3",td:["cell1","cell2","cell3","cell4"],type:"string",sort:true},
+        {th:"Text header 4",td:["cell1","cell2","cell3","cell4"],type:"string",sort:false},
+        {th:"Text header 5",td:["cell1","cell2","cell3","cell4"],type:"string",sort:false},
+        {th:"Text header 6",td:["cell1","cell2","cell3","cell4"],type:"string",sort:true},
 ]};
 
 // contextmenu, buttons
 var ediTable = new EdiTable(data,"buttons");  
+// set used for switched edit button
 var set = true;
 
+
+// Callback function for save button
 function callback(){
     var savedData = ediTable.savedData();
     var item = document.getElementsByClassName("btn-save-container")[0];
@@ -24,13 +27,10 @@ function callback(){
     divJson.appendChild(nodetext);
     item.appendChild(divJson);
 }
-
-ediTable.editMode(false);
+// Button "Save"
 ediTable.onSaveBtn(callback);
 
-/*
- * Button "Edit Table"
- */
+ // Button "Edit Table"
 var btnTableEdit = document.getElementsByClassName("btn-edit-container")[0];
 var table = document.getElementById("yourTable");
 btnTableEdit.parentNode.insertBefore(btnTableEdit,table);
@@ -38,7 +38,6 @@ btnTableEdit.parentNode.insertBefore(btnTableEdit,table);
 btnTableEdit.addEventListener("click",function(e){
     var node = e.target.classList.item(0);
         if(node === "btn-edit"){
-            //console.log("btn-edit "+set);
             ediTable.editMode(set);
             set = (set === true ? false : true);
         }   

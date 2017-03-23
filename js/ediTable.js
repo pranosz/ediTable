@@ -45,7 +45,20 @@ function EdiTable(data,editType){
     this.onMouseOverBtnEdit = this.onMouseOverBtnEdit.bind(this);
     this.onMouseOutBtnEdit = this.onMouseOutBtnEdit.bind(this);
     this.onSortBtn = this.onSortBtn.bind(this);
+    this.launchTable();
+};
+/*
+ * launchTable / Method contains group of methods that must be launched to 
+ *               run the table.
+ * @returns {undefined}
+ */
+EdiTable.prototype.launchTable = function(){
     this.generateTable();
+    this.hideSaveBtn();
+    this.cancelInput();
+    this.displayBtnRowCol("none","none");
+    this.removeEventsOfBtnsEdit();
+    this.addSortingBtns();    
 };
 /**
  * addSortingBtns / This method adds sorting to the table headers.
@@ -104,12 +117,7 @@ EdiTable.prototype.editMode = function(t){
         this.addSortEditBtn();
         this.showSaveBtn();
     }else {
-        this.generateTable();
-        this.hideSaveBtn();
-        this.cancelInput();
-        this.displayBtnRowCol("none","none");
-        this.removeEventsOfBtnsEdit();
-        this.addSortingBtns();
+        this.launchTable();
     }
 };
 /**
@@ -172,7 +180,7 @@ EdiTable.prototype.createBtnWrapper = function(containerName, wrapperName){
         this._table.parentNode.insertBefore(saveCont,null);
         this.saveBtn = saveCont;
     }
-}
+};
 /**
  * createButton 
  * @param {string} text / button text.
@@ -322,7 +330,7 @@ EdiTable.prototype.delCol = function(){
     }
 };
 /**
- * isClassExists / Check is class exist in item.
+ * isClassExists / Check if class exist in item.
  * @param {object} item / for example div element.
  * @param {string} cName
  * @returns {Boolean}
@@ -835,7 +843,7 @@ EdiTable.prototype.btnColPosition = function(){
 /**
  * setInput / Turns the table cell into an input field. I saves information about 
  *            selected table cell in "this._currentTd" to reproduce it later.
- * @param {object} td / selected table cell
+ * @param {object} td / selected table cell.
  * @returns {undefined}
  */
 EdiTable.prototype.setInput = function(td){
@@ -1012,7 +1020,7 @@ EdiTable.prototype.checkTypeInArray = function(arr,types){
     return result;
 };
 /**
- * 
+ * saveToObj / Method gets data form array and saves it in object.
  * @returns {undefined}
  */
 EdiTable.prototype.saveToObj = function(colArr){
