@@ -42,9 +42,11 @@ function EdiTable(data,editType){
     this._rows = null;
     this._rowsArr = [];
     this.onClickBtnEdit = this.onClickBtnEdit.bind(this);
+    this.onClickBtnSave = this.onClickBtnSave.bind(this);
     this.onMouseOverBtnEdit = this.onMouseOverBtnEdit.bind(this);
     this.onMouseOutBtnEdit = this.onMouseOutBtnEdit.bind(this);
     this.onSortBtn = this.onSortBtn.bind(this);
+    this.onSaveBtn = null;
     this.launchTable();
 };
 /*
@@ -329,31 +331,14 @@ EdiTable.prototype.delCol = function(){
     }
 };
 /**
- * isClassExists / Check if class exist in item.
- * @param {object} item / for example div element.
- * @param {string} cName
- * @returns {Boolean}
- */
-EdiTable.prototype.isClassExists = function(item,cName){
-    var classArr = item.className.split(" ");
-    var find = false;
-    classArr.forEach(function(cl){
-        if(cl === cName){
-            find = true;
-        }
-    });  
-    return find;
-};
-/**
  * removeSortMarks / Removes arrow graphics located on the right side of header text.
  * @returns {undefined}
  */
 EdiTable.prototype.removeSortMarks = function(){
     var sDivs = this._table.getElementsByClassName("sort-arrow");
-    var owner = this;
     Array.prototype.forEach.call(sDivs,function(div){
-        owner.isClassExists(div,"sort-arrow-down") ? div.classList.remove("sort-arrow-down") : null;
-        owner.isClassExists(div,"sort-arrow-up") ? div.classList.remove("sort-arrow-up") : null;
+        div.classList.contains("sort-arrow-down") ? div.classList.remove("sort-arrow-down") : null;
+        div.classList.contains("sort-arrow-up") ? div.classList.remove("sort-arrow-up") : null;
     });  
 };
 /**
@@ -615,6 +600,7 @@ EdiTable.prototype.onSortBtn = function(e){
  */
 EdiTable.prototype.addEventsToBtnsEdit = function(){
     this._body.addEventListener("click", this.onClickBtnEdit, false);
+    document.addEventListener("click", this.onClickBtnSave, false);
     if(this.ediType === "buttons"){
         this._body.addEventListener("mouseover", this.onMouseOverBtnEdit, false); 
         this._table.addEventListener("mouseout", this.onMouseOutBtnEdit, false);
@@ -626,6 +612,7 @@ EdiTable.prototype.addEventsToBtnsEdit = function(){
  */
 EdiTable.prototype.removeEventsOfBtnsEdit = function(){
     this._body.removeEventListener("click", this.onClickBtnEdit);
+    document.removeEventListener("click", this.onClickBtnSave);
     this._body.removeEventListener("mouseover", this.onMouseOverBtnEdit);
     this._table.removeEventListener("mouseout", this.onMouseOutBtnEdit);
 };
@@ -958,6 +945,7 @@ EdiTable.prototype.getDataFromTable = function(){
                 }
                 td.push(sortVal);
             }else {
+                console.dir(col);
                 td.push(col.innerText);
                 type = (isNaN(col.innerText)?"string":"number");
                 td.push(type);
@@ -1075,20 +1063,14 @@ EdiTable.prototype.saveTable = function(){
     this._savedData = JSON.stringify(dataObj,undefined,15);
     this.setTableProperties();
 };
-/**
- * onSaveBtn / Method that user can use to run callback function after pressing 
- *             "save" button.
- * @param {function} callback
- * @returns {EdiTable.prototype.onSaveBtn.obj}
+ /**
+ * onClickBtnSave / This method calls the action when the event occurs on "save" button.
+ *                  "onSaveBtn" is a property which is overridden by user function.
+ * @returns {undefined}
  */
-EdiTable.prototype.onSaveBtn = function(callback){
-    if(typeof callback === "function"){
-        var listener = document.addEventListener("click",function(e){
-        var node = e.target.classList.item(0);
-            if(node === "btn-save"){
-                callback();
-            }
-        },false); 
-        return listener;
+EdiTable.prototype.onClickBtnSave = function(e){ 
+    var className = e.target.classList.item(0);
+    if(className === "btn-save"){
+        this.onSaveBtn();
     }
-};
+}        

@@ -9,7 +9,7 @@ var data = {tableData:[
 ]};
 
 // contextmenu, buttons
-var ediTable = new EdiTable(data,"buttons");  
+var ediTable = new EdiTable(data,"contextmenu");  
 // set used for switched edit button
 var set = true;
 
@@ -28,7 +28,7 @@ function callback(){
     item.appendChild(divJson);
 }
 // Button "Save"
-ediTable.onSaveBtn(callback);
+ediTable.onSaveBtn = callback;
 
  // Button "Edit Table"
 var btnTableEdit = document.getElementsByClassName("btn-edit-container")[0];
