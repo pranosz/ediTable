@@ -18,9 +18,9 @@
  * @author Piotr Ranosz
  */
 "use strict";
-function EdiTable(data,editType){
+function EdiTable(editType){
     this._body = document.querySelector("body");
-    this._data = data;
+    //this._data = document;
     this._contextmenu = null;
     this._headers = null;
     this.rowBtns = null;
@@ -45,6 +45,7 @@ function EdiTable(data,editType){
     this.onClickBtnSave = this.onClickBtnSave.bind(this);
     this.onMouseOverBtnEdit = this.onMouseOverBtnEdit.bind(this);
     this.onMouseOutBtnEdit = this.onMouseOutBtnEdit.bind(this);
+    this.onContextmenu = this.onContextmenu.bind(this);
     this.onSortBtn = this.onSortBtn.bind(this);
     this.onSaveBtn = null;
     this.launchTable();
@@ -59,7 +60,55 @@ EdiTable.prototype.launchTable = function(){
     this.cancelInput();
     this.displayBtnRowCol("none","none");
     this.removeEventsOfBtnsEdit();
+    this.removeContextmenuEvent();
     this.addSortingBtns();    
+};
+/**
+ * editMode / Switches to edit mode.
+ * @param {bolean} t / If "true" the edit mode is activated, in other case not.
+ * @returns {undefined}
+ */
+EdiTable.prototype.editMode = function(t){
+    var mode = (typeof(t) === "undefined" ? false : t);
+    this.setBtnEditName();
+    if(mode === true){
+        this.removeSortingBtn();
+        this.setEditType(); // contextmenu or buttons
+        this.addSortEditBtn();
+        this.showSaveBtn();
+    }else {
+        this.launchTable();
+    }
+};
+/**
+ * setEditType
+ * @returns {undefined}
+ */
+EdiTable.prototype.setEditType = function(){
+    if(this.ediType === "contextmenu"){
+        this.addContextmenu();
+    }else if(this.ediType === "buttons"){
+        this.addBtns();
+    }else {
+        //none
+    }
+};
+/*
+ * setBtnEditName
+ * @param {boolean} mode
+ * @returns {undefined}
+ */
+EdiTable.prototype.setBtnEditName = function(){
+    var btn = document.getElementsByClassName("btn-edit")[0];
+    var btnText = "";
+    if(btn){
+        if(btn.text.indexOf("ON") !== -1){
+            btnText = btn.text.slice(0,-2)+"OFF";
+        }else if(btn.text.indexOf("OFF") !== -1){
+            btnText = btn.text.slice(0,-3)+"ON";
+        }
+        btn.text = btnText;
+    }
 };
 /**
  * addSortingBtns / This method adds sorting to the table headers.
@@ -104,35 +153,6 @@ EdiTable.prototype.removeSortingBtn = function(){
         }
     }
     this._table.removeEventListener("click", this.onSortBtn, false);
-};
-/**
- * editMode / Switches to edit mode.
- * @param {bolean} t / If "true" the edit mode is activated, in other case not.
- * @returns {undefined}
- */
-EdiTable.prototype.editMode = function(t){
-    var mode = (typeof(t) === "undefined" ? false : t);
-    if(mode === true){
-        this.removeSortingBtn();
-        this.setEditType(); // contextmenu or buttons
-        this.addSortEditBtn();
-        this.showSaveBtn();
-    }else {
-        this.launchTable();
-    }
-};
-/**
- * setEditType
- * @returns {undefined}
- */
-EdiTable.prototype.setEditType = function(){
-    if(this.ediType === "contextmenu"){
-        this.addContextmenu();
-    }else if(this.ediType === "buttons"){
-        this.addBtns();
-    }else {
-        //none
-    }
 };
 /**
  * displayBtnRowCol / Method shows or hides buttons for adding or deleting rows and columns.  
@@ -210,14 +230,12 @@ EdiTable.prototype.btnSavePosition = function(){
     this.saveBtn.style.top = (this._table.clientHeight + this._table.offsetTop)+"px";
 };
 /**
- * removeTable / Remove table (if exists) and "save" button.
+ * removeTable / Remove save button (if exists).
  * @returns {undefined}
  */
-EdiTable.prototype.removeTable = function(){ 
-    var btnSave = null;
-    if(this._table){
-        btnSave = document.getElementsByClassName("btn-save")[0];
-        this._table.parentNode.removeChild(this._table);
+EdiTable.prototype.removeBtnSave = function(){ 
+    var btnSave = document.getElementsByClassName("btn-save")[0];
+    if(btnSave){
         btnSave.parentNode.removeChild(btnSave);
     };
 };
@@ -226,9 +244,9 @@ EdiTable.prototype.removeTable = function(){
  * @returns {EdiTable.prototype.createTable.table|Element}
  */
 EdiTable.prototype.createTable = function(){  
-    this.removeTable();
+    this.removeBtnSave();
     var table = document.createElement("table");
-    table.setAttribute("id","yourTable");
+    table.classList.add("ediTable");
     table.insertRow(0);
     this._data.tableData[0].td.forEach(function(col,i){
         table.insertRow(i);
@@ -241,20 +259,14 @@ EdiTable.prototype.createTable = function(){
  * @returns {undefined}
  */
 EdiTable.prototype.generateTable = function(){
-    var table = this.createTable();
-    this._table = document.getElementById("yourTable");
-    this._data.tableData.forEach(function(col,i){
-        var th = document.createElement("th");
-        table.rows[0].appendChild(th);
-        col.td.forEach(function(cell,j){
-            table.rows[j+1].insertCell(i).innerHTML = cell;
-        });
-    });
+    //var table = this.createTable();
+    this._table = document.getElementsByClassName("ediTable")[0];
+    this.saveTable();
+    this.removeBtnSave();
     this.setTableProperties();
     this.createBtnWrapper("btn-save-container","btn-save-wrapper");
-    this.createButton("Save","btn-save","btn-save-wrapper");
+    this.createButton("Save to JSON","btn-save","btn-save-wrapper");
 };
-
 /**
  * addRow
  * @param {string} tier / Under or above.
@@ -617,6 +629,13 @@ EdiTable.prototype.removeEventsOfBtnsEdit = function(){
     this._table.removeEventListener("mouseout", this.onMouseOutBtnEdit);
 };
 /**
+ * removeContextmenuEvent
+ * @returns {undefined}
+ */
+EdiTable.prototype.removeContextmenuEvent = function(){
+    this._table.removeEventListener("contextmenu", this.onContextmenu);
+};
+/**
  * showContexmenu
  * @returns {undefined}
  */
@@ -672,33 +691,30 @@ EdiTable.prototype.disabledBtn = function(btnArr,isDisabled){
  * addEventContextmenu / Adding event to context menu. 
  * @returns {undefined}
  */
-EdiTable.prototype.addEventContextmenu = function(){  
+EdiTable.prototype.onContextmenu = function(e){  
     this._t = 1;
     var owner = this;
-    this._table.addEventListener("contextmenu",function(e){
-        var node = e.target.nodeName;
-        var btnUp = document.querySelector(".button-add-row-up");
-        var btnDel = document.querySelector(".button-del-row");
-        var sort = document.querySelector(".button-sorting");
-        var btns = [btnUp,btnDel];
-        var sortBtn = [sort];
-        if(node === "TH" || node === "TD"){
-            e.preventDefault();
-            owner.setContextPosition(e);
-            owner._selectedRowIndex = e.target.parentNode.rowIndex;
-            owner._selectedColIndex = e.target.cellIndex;
-            if(node === "TH"){
-                owner.disabledBtn(btns,true);
-                owner.disabledBtn(sortBtn,false);
-            }else if(node === "TD"){
-                owner.disabledBtn(btns,false);
-                owner.disabledBtn(sortBtn,true);
-            }
-            owner.setOnOffSorting();
-            owner.showContexmenu();
+    var node = e.target.nodeName;
+    var btnUp = document.querySelector(".button-add-row-up");
+    var btnDel = document.querySelector(".button-del-row");
+    var sort = document.querySelector(".button-sorting");
+    var btns = [btnUp,btnDel];
+    var sortBtn = [sort];
+    if(node === "TH" || node === "TD"){
+        e.preventDefault();
+        owner.setContextPosition(e);
+        owner._selectedRowIndex = e.target.parentNode.rowIndex;
+        owner._selectedColIndex = e.target.cellIndex;
+        if(node === "TH"){
+            owner.disabledBtn(btns,true);
+            owner.disabledBtn(sortBtn,false);
+        }else if(node === "TD"){
+            owner.disabledBtn(btns,false);
+            owner.disabledBtn(sortBtn,true);
         }
-    },false);
-    
+        owner.setOnOffSorting();
+        owner.showContexmenu();
+    }   
     window.addEventListener("click",function(){ 
         owner._t === 0 ? owner.showContexmenu():null;
     },false);
@@ -734,7 +750,7 @@ EdiTable.prototype.addContextmenu = function(){
         "button-del-col": {label: "Delete column", method: this.delCol, param:"DEL"}
     };
     this.drawContextmenu();
-    this.addEventContextmenu(); 
+    this._table.addEventListener("contextmenu",this.onContextmenu,false); 
 };
 /**
  * drawButtons / This method creates groups of buttons in html for "buttons" option. 
@@ -933,11 +949,13 @@ EdiTable.prototype.getDataFromTable = function(){
     var td = [];
     var type = null;
     var sortVal = false;
+    var sortChBox = null;
     this.setTableProperties();
     Array.prototype.forEach.call(this._table.rows, function(row){
         Array.prototype.forEach.call(row.cells, function(col){
             if(col.nodeName === "TH"){
-                sortVal = col.querySelector('input[type=checkbox]').value;
+                sortChBox = col.querySelector('input[type=checkbox]');
+                sortChBox !== null ? sortVal = sortChBox.value : null;
                 if(col.querySelector('input[type=text]')){
                     td.push(col.querySelector('input[type=text]').value);
                 }else {
@@ -945,7 +963,6 @@ EdiTable.prototype.getDataFromTable = function(){
                 }
                 td.push(sortVal);
             }else {
-                console.dir(col);
                 td.push(col.innerText);
                 type = (isNaN(col.innerText)?"string":"number");
                 td.push(type);
@@ -1066,6 +1083,7 @@ EdiTable.prototype.saveTable = function(){
  /**
  * onClickBtnSave / This method calls the action when the event occurs on "save" button.
  *                  "onSaveBtn" is a property which is overridden by user function.
+ * @param {object} e / event
  * @returns {undefined}
  */
 EdiTable.prototype.onClickBtnSave = function(e){ 
@@ -1073,4 +1091,4 @@ EdiTable.prototype.onClickBtnSave = function(e){
     if(className === "btn-save"){
         this.onSaveBtn();
     }
-}        
+};        

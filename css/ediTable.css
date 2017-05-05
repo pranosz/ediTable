@@ -164,7 +164,7 @@ pre {
 /*
 * Css style for table
 */
-#yourTable {
+.ediTable {
     margin: 20px;
 }
 
@@ -175,7 +175,7 @@ pre {
   font-size: 100%;
   overflow: auto;
 }
-#yourTable th {
+.ediTable th {
     background-color: rgb(112, 196, 105);
     color: white;
     font-weight: normal;
@@ -183,7 +183,7 @@ pre {
     text-align: center;
     position: relative;
 }
-#yourTable td {
+.ediTable td {
     background-color: rgb(238, 238, 238);
     color: rgb(111, 111, 111);
     padding: 10px 20px;
@@ -268,6 +268,7 @@ pre {
 	font-weight:bold;
 	padding:6px 12px;
 	text-decoration:none;
+        width: 100px;
 }
 .btn-edit:hover {
 	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #019ad2), color-stop(1, #33bdef));
